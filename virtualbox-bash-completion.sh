@@ -12,8 +12,8 @@ _vboxmanage_else_words()
             ;;
         *)
             WORDS=$( echo $subCommandRaw \
-                | sed -r 's/(--|=)[[:alnum:]-]+|\b(on|off|no|yes|[0-9]{2})\b//g' \
-                | tr -cs '[:alnum:]_-' '[ *]' \
+                | sed -r 's/(--|=)[[:alnum:]_-]+|\b(on|off|no|yes|[0-9]{2})\b//g' \
+                | tr -cs '[:alnum:]_-' ' ' \
                 | awk '{ for (i=1; i<=NF; i++) if (length($i) != 1 && index($i,"-") != 1) print $i }' \
                 | sort -u )
     esac
@@ -61,7 +61,7 @@ _vboxmanage_subcommands()
 {
     WORDS=$( vboxmanage | sed '1,/Commands:/d;/Introspection/,$d' \
         | cut -d ' ' -f3 | sort -u )
-    WORDS+=" extpack debugvm internalcommands"
+    WORDS+=" extpack debugvm unattended internalcommands"
     COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
 }
 
@@ -93,18 +93,6 @@ _vboxmanage()
         else
             case $COM2 in
            
-                debugvm)  
-
-                subCommandRaw=$( $COM1 $COM2 | tail -n +2 | tr -s ' ' \
-                    | sed -r '2,${s/VBoxManage debugvm <uuid\|vmname>//}' )
-                ;;
-
-                extpack)
-
-                subCommandRaw=$( $COM1 $COM2 | tail -n +2 | tr -s ' ' \
-                    | sed -r '2,${s/VBoxManage extpack//}' )
-                ;;
-
                 internalcommands)
 
                 if [ $COMP_CWORD -eq 2 ]; then
