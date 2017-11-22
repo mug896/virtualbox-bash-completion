@@ -40,7 +40,7 @@ _vboxmanage_vmname()
 _vboxmanage_double_quotes()
 {
     if [[ $COMP_CWORD -eq 4 \
-        && ( $PREV = --snapshot || $subCommandRaw =~ ${PREV}[^\ ]*\ \<uuid\|snapname\> ) ]]
+        && ( $PREV = --snapshot || $subCommandRaw =~ ${PREV}[^\ ]*" <uuid|snapname>" ) ]]
     then
         WORDS=$( vboxmanage snapshot "${COMP_WORDS[2]:1:-1}" list \
             | sed -r 's/.*Name: (.*) \(UUID.*/\\"\1\\"/' )
@@ -123,12 +123,12 @@ _vboxmanage()
     elif [[ $CUR =~ ^\" ]]; then
         _vboxmanage_double_quotes
 
-    elif [[ $subCommandRaw =~ ${PREV}[^\ ]*\ \<uuid\|vmname\> ]]; then
+    elif [[ $subCommandRaw =~ ${PREV}[^\ ]*" <uuid|vmname>" ]]; then
         _vboxmanage_vmname
 
     elif [[ $COMP_CWORD -eq 4 &&
             ( $PREV = --snapshot ||
-              $subCommandRaw =~ ${PREV}[^\ ]*\ \<uuid\|snapname\> ) ]]; then
+              $subCommandRaw =~ ${PREV}[^\ ]*" <uuid|snapname>" ) ]]; then
         _vboxmanage_snapname
 
     else
