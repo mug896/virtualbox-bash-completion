@@ -1,6 +1,6 @@
 ## Welcome 
 
-Ubuntu virtualbox 5.2
+Ubuntu virtualbox 6.0
 
 [![Imgur](http://i.imgur.com/BidMGg7.png?2)](https://www.youtube.com/watch?v=YfjOxnAaiys)
 
