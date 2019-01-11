@@ -59,9 +59,10 @@ _vboxmanage_ostype()
 
 _vboxmanage_subcommands()
 {
-    WORDS=$( vboxmanage | sed '1,/Commands:/d;/Introspection/,$d' \
+
+    WORDS=$( vboxmanage | sed '1,/Commands:/d;/Medium content access:/,$d' \
         | cut -d ' ' -f3 | sort -u )
-    WORDS+=" extpack debugvm unattended internalcommands"
+    WORDS+=" mediumio extpack debugvm unattended internalcommands"
     COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
 }
 
