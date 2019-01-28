@@ -18,7 +18,7 @@ _vboxmanage_else_words()
                 | sort -u )
     esac
 
-    COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
+    COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
 }
 
 _vboxmanage_snapname()
@@ -26,7 +26,7 @@ _vboxmanage_snapname()
     WORDS=$( vboxmanage snapshot "${COMP_WORDS[2]:1:-1}" list | nl -n ln -w2 -s' ' )
     [ $(expr index + "$WORDS" $'\n') -eq 0 ] && WORDS=${WORDS/#/$'-\n'}
     IFS=$'\n'
-    COMPREPLY=( $(compgen -W "$WORDS") )
+    COMPREPLY=( $WORDS )
 }
 
 _vboxmanage_vmname()
@@ -34,7 +34,7 @@ _vboxmanage_vmname()
     WORDS=$( vboxmanage list vms | nl -n ln -w2 -s' ' )
     [ $(expr index + "$WORDS" $'\n') -eq 0 ] && WORDS=${WORDS/#/$'-\n'}
     IFS=$'\n'
-    COMPREPLY=( $(compgen -W "$WORDS") )
+    COMPREPLY=( $WORDS )
 }
 
 _vboxmanage_double_quotes()
@@ -48,13 +48,13 @@ _vboxmanage_double_quotes()
         WORDS=$( vboxmanage list vms | sed -r 's/"(.*)".*/\\"\1\\"/' )
     fi
     IFS=$'\n'
-    COMPREPLY=( $(compgen -W "$WORDS" -- \\\"${CUR}) )
+    COMPREPLY=( $(compgen -W "$WORDS" -- \\\""$CUR") )
 }
 
 _vboxmanage_ostype()
 {
     WORDS=$( vboxmanage list ostypes | sed -rn 's/^ID: *//p' | sort -u )
-    COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
+    COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
 }
 
 _vboxmanage_subcommands()
@@ -63,17 +63,17 @@ _vboxmanage_subcommands()
     WORDS=$( vboxmanage | sed '1,/Commands:/d;/Medium content access:/,$d' \
         | cut -d ' ' -f3 | sort -u )
     WORDS+=" mediumio extpack debugvm unattended internalcommands"
-    COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
+    COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
 }
 
 _vboxmanage_options() 
 {
     if [ $COMP_CWORD -eq 1 ]; then
         WORDS=$( vboxmanage | sed -rn '/General Options:/,/Commands:/ s/.*(--\w+).*/\1/p; /Commands:/Q' )
-        COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
+        COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
     else
         WORDS=$( echo $subCommandRaw | grep -Po -- "--[\w-]+" | sort -u )
-        COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
+        COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
     fi
 }
 
@@ -88,17 +88,17 @@ _vboxmanage()
     # prevent globbing in option strings like '[option1] [--option2]'
     set -o noglob
 
-    if [ $COMP_CWORD -ge 2 ]; then
-        if [[ $COM2 =~ ^- ]]; then
+    if [ "$COMP_CWORD" -ge 2 ]; then
+        if [[ "$COM2" =~ ^- ]]; then
             return
         else
             case $COM2 in
            
                 internalcommands)
 
-                if [ $COMP_CWORD -eq 2 ]; then
+                if [ "$COMP_CWORD" -eq 2 ]; then
                     WORDS=$( vboxmanage internalcommands |& grep -Po '(?<=^  )([^ ]+)' )
-                    COMPREPLY=( $(compgen -W "$WORDS" -- ${CUR}) )
+                    COMPREPLY=( $(compgen -W "$WORDS" -- "$CUR") )
                     return
                 fi
                 ;;
