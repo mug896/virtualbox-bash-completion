@@ -24,9 +24,9 @@ _vboxmanage_else_words()
 _vboxmanage_snapname()
 {
     WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | awk '{a[i++]=$0} END{ 
-            if (isarray(a))
-                for (i in a) printf "%0*d) %s\n", length(i), i, a[i]
-            }')
+            if (isarray(a)) { len=length(i)
+                for (i in a) printf "%0*d) %s\n", len, i, a[i]
+            }}')
     [ $(expr index + "$WORDS" $'\n') -eq 0 ] && WORDS=${WORDS/#/$'-\n'}
     IFS=$'\n'
     COMPREPLY=( $WORDS )
@@ -35,9 +35,9 @@ _vboxmanage_snapname()
 _vboxmanage_vmname()
 {
     WORDS=$( $COM1 list vms | awk '{a[i++]=$0} END{ 
-            if (isarray(a))
-                for (i in a) printf "%0*d) %s\n", length(i), i, a[i]
-            }')
+            if (isarray(a)) { len=length(i)
+                for (i in a) printf "%0*d) %s\n", len, i, a[i]
+            }}')
     [ $(expr index + "$WORDS" $'\n') -eq 0 ] && WORDS=${WORDS/#/$'-\n'}
     IFS=$'\n'
     COMPREPLY=( $WORDS )
