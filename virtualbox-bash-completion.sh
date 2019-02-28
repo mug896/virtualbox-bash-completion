@@ -21,26 +21,21 @@ _vboxmanage_else_words()
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
 
-_vboxmanage_snapname()
-{
-    WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | awk '{a[i++]=$0} END{ 
-            if (isarray(a)) { 
-                if (length(a) == 1) print " "
-                len=length(i)
-                for (i in a) printf "%0*d) %s\n", len, i, a[i]
-            }}')
-    IFS=$'\n'
-    COMPREPLY=( $WORDS )
-}
-
 _vboxmanage_vmname()
 {
-    WORDS=$( $COM1 list vms | awk '{a[i++]=$0} END{ 
+    local res
+    if [ "$1" == "snap" ]; then
+        res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list )
+    else
+        res=$( $COM1 list vms )
+    fi
+    WORDS=$( echo "$res" | awk '{a[i++]=$0} END{ 
             if (isarray(a)) { 
                 if (length(a) == 1) print " "
                 len=length(i)
                 for (i in a) printf "%0*d) %s\n", len, i, a[i]
             }}')
+
     IFS=$'\n'
     COMPREPLY=( $WORDS )
 }
@@ -138,7 +133,7 @@ _vboxmanage()
     elif [[ $COMP_CWORD -eq 4 &&
             ( $PREV = --snapshot ||
               $subCommandRaw =~ ${PREV}[^\ ]*" <uuid|snapname>" ) ]]; then
-        _vboxmanage_snapname
+        _vboxmanage_vmname snap
 
     else
         _vboxmanage_else_words
