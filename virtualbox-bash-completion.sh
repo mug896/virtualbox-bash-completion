@@ -29,15 +29,8 @@ _vboxmanage_vmname()
     else
         res=$( $COM1 list vms )
     fi
-    WORDS=$( echo "$res" | awk '{a[i++]=$0} END{ 
-            if (isarray(a)) { 
-                if (length(a) == 1) print " "
-                len=length(i)
-                for (i in a) printf "%0*d) %s\n", len, i, a[i]
-            }}')
-
-    IFS=$'\n'
-    COMPREPLY=( $WORDS )
+    WORDS=$(echo "$res" | cut -d'"' -f2)
+    COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
 
 _vboxmanage_double_quotes()
