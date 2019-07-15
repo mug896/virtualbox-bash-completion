@@ -1,3 +1,10 @@
+#!/usr/bin/env bash
+#
+# VirtualBox bash completion
+#
+# Copyright (C) 2017-2019 Hyunho Cho
+#
+
 _vboxmanage_else_words()
 {
     subCommandRaw=$( echo $subCommandRaw | cut -d ' ' -f3- \
