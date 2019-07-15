@@ -4,6 +4,8 @@
 #
 # Copyright (C) 2017-2019 Hyunho Cho
 #
+# See https://github.com/mug896/virtualbox-bash-completion
+#
 
 _vboxmanage_else_words()
 {
