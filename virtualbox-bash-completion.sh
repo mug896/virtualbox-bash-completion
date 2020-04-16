@@ -61,7 +61,7 @@ _vboxmanage_options()
 {
     if [ "$1" = value ]; then
         WORDS=$( echo $subComRaw \
-            | sed -r -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/' \
+            | sed -r -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
         [ -z "$WORDS" ] && _vboxmanage_else_words
