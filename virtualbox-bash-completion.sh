@@ -43,9 +43,9 @@ _vboxmanage_double_quotes()
     if [ "$PREV" = --snapshot ] || 
        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]
     then
-        WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -r 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/' )
+        WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -E 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/' )
     else
-        WORDS=$( $COM1 list vms | sed -r 's/^"([^"]*)".*/\\"\1\\"/' )
+        WORDS=$( $COM1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
     fi
     IFS=$'\n'
     COMPREPLY=( $(compgen -W "$WORDS" -- \\\"$CUR) )
@@ -63,14 +63,14 @@ _vboxmanage_options()
 {
     if [ "$1" = value ]; then
         WORDS=$( echo $subComRaw \
-            | sed -r -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/g' \
+            | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
         [ -z "$WORDS" ] && _vboxmanage_else_words
     else 
         if [ "$COMP_CWORD" = 1 ]; then
             WORDS=$( echo "$subComRaw" \
-                | sed -rn '/General Options:/,/Commands:/ s/.*(--[[:alnum:]-]+).*/\1/p' )
+                | sed -En '/General Options:/,/Commands:/ s/.*(--[[:alnum:]-]+).*/\1/p' )
         elif [[ $COM2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
             WORDS=$( echo "$subComRaw" \
                 | sed -n '/^ *'"${COMP_WORDS[2]}"'/,/^$/p' | grep -Eo -- '-[[:alnum:]-]+=?' )
@@ -85,7 +85,7 @@ _vboxmanage_options()
 _vboxmanage_else_words()
 {
     WORDS=$( echo $subComRaw \
-            | sed -r -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
+            | sed -E -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
                      -e ':X s/\[[^][]*\]//g; tX; :Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ' \
                      -e 's/'"$COM1 $COM2"'//g; s/[^[:alnum:]=-]/ /g' \
             | gawk '{ for (i=1; i<=NF; i++) { if ($i ~ /^[[:alpha:]][[:alnum:]-]+=?$/) print $i }}' )
@@ -115,7 +115,7 @@ _vboxmanage_main()
         _vboxmanage_options
     
     elif [ "$PREV" = --ostype ]; then
-        WORDS=$( $COM1 list ostypes | sed -rn 's/^ID:\s+//p' )
+        WORDS=$( $COM1 list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
     elif [[ $CUR =~ ^\" ]]; then
