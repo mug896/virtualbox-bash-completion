@@ -1,7 +1,9 @@
 _vboxmanage_vmname()
 {
     local res
-    echo -n ' wait ... ' >&2
+
+    test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
+    echo -n "$_vboxmanage_wait" >&2
 
     if [ "$1" = "snapshot-name" ]; then
         res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed 's/ *(UUID:[^)]\+)//' )
