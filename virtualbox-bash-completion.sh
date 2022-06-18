@@ -121,9 +121,6 @@ _vboxmanage_main()
     elif [[ $CUR =~ ^\" ]]; then
         _vboxmanage_double_quotes
 
-    elif [[ $PREV =~ ^- ]]; then
-        _vboxmanage_options value
-
     elif [ "$COMP_CWORD" = 1 ]; then
         _vboxmanage_subcommands
 
@@ -135,7 +132,9 @@ _vboxmanage_main()
          [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
 
         _vboxmanage_vmname snapshot-name
-
+    
+    elif [[ $PREV =~ ^- ]]; then
+        _vboxmanage_options value
     else
         [ "$COM2" != internalcommands ] && _vboxmanage_else_words
     fi
