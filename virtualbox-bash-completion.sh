@@ -68,14 +68,15 @@ _vboxmanage_options()
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
         [ -z "$WORDS" ] && _vboxmanage_else_words
     else 
+        local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
         if [ "$COMP_CWORD" = 1 ]; then
             WORDS=$( echo "$subComRaw" \
-                | sed -En '/General Options:/,/Commands:/ s/.*(--[[:alnum:]-]+).*/\1/p' )
+                | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
         elif [[ $COM2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
             WORDS=$( echo "$subComRaw" \
-                | sed -n '/^ *'"${COMP_WORDS[2]}"'/,/^$/p' | grep -Eo -- '-[[:alnum:]-]+=?' )
+                | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/<[^>]*>//g; p}' | eval "$GREP" )
         else
-            WORDS=$( echo "$subComRaw" | grep -Eo -- "--[[:alnum:]-]+=?" )
+            WORDS=$( echo "$subComRaw" | sed -En 's/<[^>]*>//g; p' | eval "$GREP" )
         fi
     fi
     
