@@ -124,7 +124,7 @@ _vboxmanage_main()
     elif [ "$COMP_CWORD" = 1 ]; then
         _vboxmanage_subcommands
 
-    elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +("<uuid|vmname>"|"<vmname|uuid>") ]]; then
+    elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
 
         _vboxmanage_vmname vmname
 
