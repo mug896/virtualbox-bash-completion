@@ -6,7 +6,7 @@ _vboxmanage_vmname()
     echo -n "$_vboxmanage_wait" >&2
 
     if [ "$1" = "snapshot-name" ]; then
-        res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed 's/ *(UUID:[^)]\+)//' )
+        res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else  # vmname
         res=$( $COM1 list vms | sed 's/{[^}]\+}//' )
     fi
@@ -34,7 +34,7 @@ _vboxmanage_number()
             | gawk $CUR' == $1+0 {print $2; exit}' FPAT='[^ ]+|"[^"]+"' )
     else  # snapshot-name
         COMPREPLY=$( echo "$value" \
-            | gawk $CUR' == $1+0 {gsub(/^[^:]+: | *\*$/,""); print "\""$0"\""; exit}' )
+            | gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print "\""$0"\""; exit}' )
     fi
 }
 
