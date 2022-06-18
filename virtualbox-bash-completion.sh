@@ -8,7 +8,7 @@ _vboxmanage_vmname()
     if [ "$1" = "snapshot-name" ]; then
         res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else  # vmname
-        res=$( $COM1 list vms | sed 's/{[^}]\+}//' )
+        res=$( $COM1 list vms | sed 's/{[^}]\+}$//' )
     fi
     WORDS=$( echo "$res" | gawk '{a[i++]=$0} END{ 
             if (isarray(a)) { 
