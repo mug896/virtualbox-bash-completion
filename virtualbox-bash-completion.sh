@@ -126,16 +126,15 @@ _vboxmanage_main()
         _vboxmanage_subcommands
 
     elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
-
         _vboxmanage_vmname vmname
 
     elif [ "$PREV" = --snapshot ] || 
          [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
-
         _vboxmanage_vmname snapshot-name
     
     elif [[ $PREV =~ ^- ]]; then
         _vboxmanage_options value
+
     else
         [ "$COM2" != internalcommands ] && _vboxmanage_else_words
     fi
