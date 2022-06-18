@@ -43,7 +43,7 @@ _vboxmanage_double_quotes()
     if [ "$PREV" = --snapshot ] || 
        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]
     then
-        WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -E 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/' )
+        WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
     else
         WORDS=$( $COM1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
     fi
