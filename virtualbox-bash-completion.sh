@@ -74,9 +74,9 @@ _vboxmanage_options()
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
         elif [[ $COM2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
             WORDS=$( echo "$subComRaw" \
-                | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//g; p}' | eval "$GREP" )
+                | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         else
-            WORDS=$( echo "$subComRaw" | sed -En 's/\b[0-9]+-([0-9]+|N)//g; p' | eval "$GREP" )
+            WORDS=$( echo "$subComRaw" | sed -En 's/\b[0-9]+-([0-9]+|N)//ig; p' | eval "$GREP" )
         fi
     fi
     
