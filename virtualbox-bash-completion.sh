@@ -10,7 +10,7 @@ _vboxmanage_vmname()
     else  # vmname
         res=$( $COM1 list vms | sed 's/{[^}]\+}$//' )
     fi
-    WORDS=$( echo "$res" | gawk '{a[i++]=$0} END{ 
+    WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END{ 
             if (isarray(a)) { 
                 if (length(a) == 1) print " "
                 len=length(i)
@@ -66,7 +66,7 @@ _vboxmanage_options()
             | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
-        [ -z "$WORDS" ] && _vboxmanage_else_words
+        [ -z "$WORDS" ] && { _vboxmanage_else_words; return ;}
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
         if [ "$COMP_CWORD" = 1 ]; then
