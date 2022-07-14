@@ -149,4 +149,4 @@ _vboxmanage() {
     set +o noglob
 }
 
-complete -F _vboxmanage vboxmanage VBoxManage
+complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
