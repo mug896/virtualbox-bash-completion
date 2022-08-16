@@ -91,6 +91,7 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     local CMD1=$1 CMD2=${COMP_WORDS[1]} CUR=$2 PREV=$3
+    [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS
     set -o noglob
     local subComRaw=$($CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
