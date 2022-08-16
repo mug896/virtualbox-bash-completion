@@ -56,15 +56,15 @@ _vboxmanage_subcommands()
 
 _vboxmanage_options() 
 {
-    if [ "$1" = value ]; then
+    if [[ $1 = value ]]; then
         WORDS=$( echo $subComRaw \
             | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
-        [ -z "$WORDS" ] && { _vboxmanage_else_words; return ;}
+        [[ -z $WORDS ]] && { _vboxmanage_else_words; return ;}
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
-        if [ "$COMP_CWORD" = 1 ]; then
+        if (( COMP_CWORD == 1 )); then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
         elif [[ $CMD2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
@@ -105,20 +105,20 @@ _vboxmanage()
     elif [[ $CUR =~ ^- ]]; then
         _vboxmanage_options
     
-    elif [ "$PREV" = --ostype ]; then
+    elif [[ $PREV = --ostype ]]; then
         WORDS=$( $CMD1 list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
     elif [[ ${COMP_WORDS[COMP_CWORD]} =~ ^\" ]]; then
         _vboxmanage_double_quotes
 
-    elif [ "$COMP_CWORD" = 1 ]; then
+    elif (( COMP_CWORD == 1 )); then
         _vboxmanage_subcommands
 
     elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
         _vboxmanage_vmname vmname
 
-    elif [ "$PREV" = --snapshot ] || 
+    elif [[ $PREV = --snapshot ]] || 
          [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_vmname snapshot-name
     
@@ -126,10 +126,10 @@ _vboxmanage()
         _vboxmanage_options value
 
     else
-        [ "$CMD2" != internalcommands ] && _vboxmanage_else_words
+        [[ $CMD2 != internalcommands ]] && _vboxmanage_else_words
     fi
 
-    [ "${COMPREPLY: -1}" = "=" ] && compopt -o nospace
+    [[ ${COMPREPLY: -1} = "=" ]] && compopt -o nospace
 }
 
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
