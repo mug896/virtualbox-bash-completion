@@ -15,11 +15,8 @@ _vboxmanage_vmname()
                 len=length(i)
                 for (i in a) printf "%0*d) %s\n", len, i+1, a[i]
             }}')
-
     _vboxmanage_vmname=$1$'\n'$WORDS
-
-    IFS=$'\n'
-    COMPREPLY=( $WORDS )
+    IFS=$'\n' COMPREPLY=( $WORDS )
 }
 
 _vboxmanage_number()
@@ -77,7 +74,6 @@ _vboxmanage_options()
             WORDS=$( echo "$subComRaw" | sed -En 's/\b[0-9]+-([0-9]+|N)//ig; p' | eval "$GREP" )
         fi
     fi
-    
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
 
@@ -95,10 +91,9 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     local CMD1=$1 CMD2=${COMP_WORDS[1]} CUR=$2 PREV=$3
-    local IFS=$' \t\n' WORDS subComRaw 
+    local IFS=$' \t\n' WORDS
     set -o noglob
-
-    subComRaw=$( $CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/' )
+    local subComRaw=$($CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
     if [[ $CUR =~ ^[0-9]+$ && -n $_vboxmanage_vmname ]]; then
         _vboxmanage_number
