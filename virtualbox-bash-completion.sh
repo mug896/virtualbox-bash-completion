@@ -102,7 +102,6 @@ _vboxmanage_main()
     local WORDS subComRaw
     local IFS=$' \t\n'
 
-    [ "$COMP_CWORD" = 1 ] && COM2=""
     subComRaw=$( $COM1 $COM2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/' )
 
     if [[ $CUR =~ ^[0-9]+$ && -n $_vboxmanage_vmname ]]; then
@@ -150,3 +149,4 @@ _vboxmanage() {
 }
 
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
+
