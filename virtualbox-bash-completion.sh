@@ -4,7 +4,7 @@ _vboxmanage_vmname()
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
-    if [ "$1" = "snapshot-name" ]; then
+    if [[ $1 == snapshot-name ]]; then
         res=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else  # vmname
         res=$( $CMD1 list vms | sed 's/{[^}]\+}$//' )
@@ -25,7 +25,7 @@ _vboxmanage_number()
     local value=${_vboxmanage_vmname#*$'\n'}
     
     CUR=$(( 10#$CUR ))
-    if [ "$title" = vmname ]; then
+    if [[ $title == vmname ]]; then
         COMPREPLY=$( echo "$value" \
             | gawk $CUR' == $1+0 {print $2; exit}' FPAT='[^ ]+|"[^"]+"' )
     else  # snapshot-name
@@ -36,7 +36,7 @@ _vboxmanage_number()
 
 _vboxmanage_double_quotes()
 {
-    if [ "$PREV" = --snapshot ] || 
+    if [[ $PREV == --snapshot ]] || 
        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]
     then
         WORDS=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
@@ -56,7 +56,7 @@ _vboxmanage_subcommands()
 
 _vboxmanage_options() 
 {
-    if [[ $1 = value ]]; then
+    if [[ $1 == value ]]; then
         WORDS=$( echo $subComRaw \
             | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
@@ -67,7 +67,7 @@ _vboxmanage_options()
         if (( COMP_CWORD == 1 )); then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
-        elif [[ $CMD2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
+        elif [[ $CMD2 == internalcommands && $COMP_CWORD -ge 3 ]]; then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         else
@@ -98,14 +98,14 @@ _vboxmanage()
     if [[ $CUR =~ ^[0-9]+$ && -n $_vboxmanage_vmname ]]; then
         _vboxmanage_number
 
-    elif [[ $CMD2 = internalcommands && $COMP_CWORD -eq 2 ]]; then
+    elif [[ $CMD2 == internalcommands && $COMP_CWORD -eq 2 ]]; then
         WORDS=$( echo "$subComRaw" | grep -Po '(?<=^  )([a-z]+)' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
     elif [[ $CUR =~ ^- ]]; then
         _vboxmanage_options
     
-    elif [[ $PREV = --ostype ]]; then
+    elif [[ $PREV == --ostype ]]; then
         WORDS=$( $CMD1 list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
@@ -118,7 +118,7 @@ _vboxmanage()
     elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
         _vboxmanage_vmname vmname
 
-    elif [[ $PREV = --snapshot ]] || 
+    elif [[ $PREV == --snapshot ]] || 
          [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_vmname snapshot-name
     
@@ -129,7 +129,7 @@ _vboxmanage()
         [[ $CMD2 != internalcommands ]] && _vboxmanage_else_words
     fi
 
-    [[ ${COMPREPLY: -1} = "=" ]] && compopt -o nospace
+    [[ ${COMPREPLY: -1} == "=" ]] && compopt -o nospace
 }
 
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
