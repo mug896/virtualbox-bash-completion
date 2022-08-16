@@ -1,14 +1,13 @@
 _vboxmanage_vmname()
 {
     local res
-
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
     if [ "$1" = "snapshot-name" ]; then
-        res=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
+        res=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else  # vmname
-        res=$( $COM1 list vms | sed 's/{[^}]\+}$//' )
+        res=$( $CMD1 list vms | sed 's/{[^}]\+}$//' )
     fi
     WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END{ 
             if (isarray(a)) { 
@@ -43,12 +42,11 @@ _vboxmanage_double_quotes()
     if [ "$PREV" = --snapshot ] || 
        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]
     then
-        WORDS=$( $COM1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
+        WORDS=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
     else
-        WORDS=$( $COM1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
+        WORDS=$( $CMD1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
     fi
-    IFS=$'\n'
-    COMPREPLY=( $(compgen -W "$WORDS" -- \\\"$CUR) )
+    IFS=$'\n' COMPREPLY=( $(compgen -W "$WORDS" -- \\\"$CUR) )
 }
 
 _vboxmanage_subcommands()
@@ -63,7 +61,7 @@ _vboxmanage_options()
 {
     if [ "$1" = value ]; then
         WORDS=$( echo $subComRaw \
-            | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"$COM1 $COM2"'/\a/g' \
+            | sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]* ([^][]+).*/\1/; tX; d' \
                      -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
         [ -z "$WORDS" ] && { _vboxmanage_else_words; return ;}
@@ -72,7 +70,7 @@ _vboxmanage_options()
         if [ "$COMP_CWORD" = 1 ]; then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
-        elif [[ $COM2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
+        elif [[ $CMD2 = internalcommands && $COMP_CWORD -ge 3 ]]; then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         else
@@ -88,26 +86,24 @@ _vboxmanage_else_words()
     WORDS=$( echo $subComRaw \
             | sed -E -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
                      -e ':X s/\[[^][]*\]//g; tX; :Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ' \
-                     -e 's/'"$COM1 $COM2"'//g; s/[^[:alnum:]=-]/ /g' \
+                     -e 's/'"VBoxManage $CMD2"'//g; s/[^[:alnum:]=-]/ /g' \
             | gawk '{ for (i=1; i<=NF; i++) { if ($i ~ /^[[:alpha:]][[:alnum:]-]+=?$/) print $i }}' )
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
 
-_vboxmanage_main() 
+_vboxmanage() 
 {
-    local CUR=${COMP_WORDS[COMP_CWORD]}
-    local PREV=${COMP_WORDS[COMP_CWORD-1]}
-    local COM1=VBoxManage
-    local COM2=${COMP_WORDS[1]}
-    local WORDS subComRaw
-    local IFS=$' \t\n'
+    trap 'set +o noglob' RETURN   
+    local CMD1=$1 CMD2=${COMP_WORDS[1]} CUR=$2 PREV=$3
+    local IFS=$' \t\n' WORDS subComRaw 
+    set -o noglob
 
-    subComRaw=$( $COM1 $COM2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/' )
+    subComRaw=$( $CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/' )
 
     if [[ $CUR =~ ^[0-9]+$ && -n $_vboxmanage_vmname ]]; then
         _vboxmanage_number
 
-    elif [[ $COM2 = internalcommands && $COMP_CWORD -eq 2 ]]; then
+    elif [[ $CMD2 = internalcommands && $COMP_CWORD -eq 2 ]]; then
         WORDS=$( echo "$subComRaw" | grep -Po '(?<=^  )([a-z]+)' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
@@ -115,10 +111,10 @@ _vboxmanage_main()
         _vboxmanage_options
     
     elif [ "$PREV" = --ostype ]; then
-        WORDS=$( $COM1 list ostypes | sed -En 's/^ID:\s+//p' )
+        WORDS=$( $CMD1 list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
-    elif [[ $CUR =~ ^\" ]]; then
+    elif [[ ${COMP_WORDS[COMP_CWORD]} =~ ^\" ]]; then
         _vboxmanage_double_quotes
 
     elif [ "$COMP_CWORD" = 1 ]; then
@@ -135,17 +131,10 @@ _vboxmanage_main()
         _vboxmanage_options value
 
     else
-        [ "$COM2" != internalcommands ] && _vboxmanage_else_words
+        [ "$CMD2" != internalcommands ] && _vboxmanage_else_words
     fi
-}
-
-_vboxmanage() {
-    set -o noglob
-
-    _vboxmanage_main
 
     [ "${COMPREPLY: -1}" = "=" ] && compopt -o nospace
-    set +o noglob
 }
 
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
