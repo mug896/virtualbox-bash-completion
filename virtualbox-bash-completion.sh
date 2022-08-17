@@ -90,7 +90,8 @@ _vboxmanage_else_words()
 _vboxmanage() 
 {
     trap 'set +o noglob' RETURN   
-    local CMD1=$1 CMD2=${COMP_WORDS[1]} CUR=$2 PREV=$3
+    local CMD1=$1 CMD2 CUR=$2 PREV=$3
+    (( COMP_CWORD >= 2 )) && CMD2=${COMP_WORDS[1]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS
     set -o noglob
