@@ -96,7 +96,7 @@ _vboxmanage()
     set -o noglob
     local subComRaw=$($CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
-    if [[ $CUR =~ ^[0-9]+$ && -n $_vboxmanage_vmname ]]; then
+    if [[ $CUR = +([0-9]) && -n $_vboxmanage_vmname ]]; then
         _vboxmanage_number
 
     elif [[ $CMD2 == internalcommands && $COMP_CWORD -eq 2 ]]; then
