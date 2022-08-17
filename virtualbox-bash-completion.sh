@@ -5,7 +5,8 @@ _vboxmanage_vmname()
     echo -n "$_vboxmanage_wait" >&2
 
     if [[ $1 == snapshot-name ]]; then
-        res=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
+        for ((i = 1; i < COMP_CWORD; )) { [[ ${COMP_WORDS[i++]} == snapshot ]] && break ;}
+        res=$( $CMD1 snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else  # vmname
         res=$( $CMD1 list vms | sed 's/{[^}]\+}$//' )
     fi
@@ -39,7 +40,8 @@ _vboxmanage_double_quotes()
     if [[ $PREV == --snapshot ]] || 
        [[ $subComRaw =~ ${PREV}[$' \n']*\ +"<snapshot-name" ]]
     then
-        WORDS=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
+        for ((i = 1; i < COMP_CWORD; )) { [[ ${COMP_WORDS[i++]} == snapshot ]] && break ;}
+        WORDS=$( $CMD1 snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
     else
         WORDS=$( $CMD1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
     fi
@@ -63,12 +65,15 @@ _vboxmanage_options()
         [[ -z $WORDS ]] && { _vboxmanage_else_words; return ;}
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
-        if (( COMP_CWORD == 1 )); then
+        if [[ -z $CMD2 ]]; then
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
-        elif [[ $CMD2 == internalcommands && $COMP_CWORD -ge 3 ]]; then
+        elif [[ $CMD2 == internalcommands && $PREV != internalcommands ]]; then
+            for ((i = 1; i < COMP_CWORD; )) do 
+                [[ ${COMP_WORDS[i++]} == internalcommands ]] && break
+            done
             WORDS=$( echo "$subComRaw" \
-                | sed -En '/^ *'"${COMP_WORDS[2]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
+                | sed -En '/^ *'"${COMP_WORDS[i]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         else
             WORDS=$( echo "$subComRaw" | sed -En 's/\b[0-9]+-([0-9]+|N)//ig; p' | eval "$GREP" )
         fi
@@ -90,16 +95,25 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     set -o noglob
-    local CMD1=$1 CMD2 CUR=$2 PREV=$3
-    (( COMP_CWORD >= 2 )) && CMD2=${COMP_WORDS[1]}
+    local CMD1=$1 CMD2 CUR=$2 PREV=$3 i
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS
+    for (( i = 1; ; )) do
+        case ${COMP_WORDS[i]} in 
+            -q|--nologo|@*) let i+=1 ;;
+            --settingspw|--settingspwfile) let i+=2 ;;
+            *) break ;;
+        esac
+    done
+    [[ ${COMP_WORDS[i]} != $CUR ]] && CMD2=${COMP_WORDS[i]}
     local subComRaw=$($CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
-    if [[ $CUR = +([0-9]) && -n $_vboxmanage_vmname ]]; then
+    if [[ $PREV == --settingspwfile ]]; then :
+
+    elif [[ $CUR = +([0-9]) && -n $_vboxmanage_vmname ]]; then
         _vboxmanage_number
 
-    elif [[ $CMD2 == internalcommands && $COMP_CWORD -eq 2 ]]; then
+    elif [[ $CMD2 == internalcommands && $PREV == internalcommands ]]; then
         WORDS=$( echo "$subComRaw" | grep -Po '(?<=^  )([a-z]+)' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
@@ -113,7 +127,7 @@ _vboxmanage()
     elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
         _vboxmanage_double_quotes
 
-    elif (( COMP_CWORD == 1 )); then
+    elif [[ -z $CMD2 ]]; then
         _vboxmanage_subcommands
 
     elif [[ -z $CUR ]] && 
