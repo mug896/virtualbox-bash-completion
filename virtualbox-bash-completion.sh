@@ -114,7 +114,7 @@ _vboxmanage()
         WORDS=$( echo "$HELP" | grep -Po '(?<=^  )([a-z]+)' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
-    elif [[ $CUR =~ ^- ]]; then
+    elif [[ $CUR = -* ]]; then
         _vboxmanage_options
     
     elif [[ $PREV == --ostype ]]; then
@@ -135,7 +135,7 @@ _vboxmanage()
          $HELP =~ ${PREV}[^$' \n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_vmname snapshot-name
     
-    elif [[ $PREV =~ ^- ]]; then
+    elif [[ $PREV = -* ]]; then
         _vboxmanage_options value
 
     else
