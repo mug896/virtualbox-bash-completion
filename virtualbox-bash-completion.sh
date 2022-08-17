@@ -117,11 +117,11 @@ _vboxmanage()
         _vboxmanage_subcommands
 
     elif [[ -z $CUR ]] && 
-        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
+        [[ $subComRaw =~ ${PREV}[^$' \n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
         _vboxmanage_vmname vmname
 
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || 
-         $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
+         $subComRaw =~ ${PREV}[^$' \n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_vmname snapshot-name
     
     elif [[ $PREV =~ ^- ]]; then
