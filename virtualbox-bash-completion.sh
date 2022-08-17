@@ -110,7 +110,7 @@ _vboxmanage()
         WORDS=$( $CMD1 list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
-    elif [[ ${COMP_WORDS[COMP_CWORD]} = \"* ]]; then
+    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
         _vboxmanage_double_quotes
 
     elif (( COMP_CWORD == 1 )); then
