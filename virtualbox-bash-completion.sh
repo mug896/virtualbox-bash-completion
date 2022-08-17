@@ -48,9 +48,8 @@ _vboxmanage_double_quotes()
 
 _vboxmanage_subcommands()
 {
-    WORDS=$( echo "$subComRaw" \
-        | tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null \
-        | { cat; echo internalcommands ;} )
+    WORDS=$( echo "$subComRaw" |
+        tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
 
