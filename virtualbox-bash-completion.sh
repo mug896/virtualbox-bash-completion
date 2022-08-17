@@ -69,9 +69,7 @@ _vboxmanage_options()
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
         elif [[ $CMD2 == internalcommands && $PREV != internalcommands ]]; then
-            for ((i = 1; i < COMP_CWORD; )) do 
-                [[ ${COMP_WORDS[i++]} == internalcommands ]] && break
-            done
+            for ((i = 1; i < COMP_CWORD; )) { [[ ${COMP_WORDS[i++]} == internalcommands ]] && break ;}
             WORDS=$( echo "$subComRaw" \
                 | sed -En '/^ *'"${COMP_WORDS[i]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         else
