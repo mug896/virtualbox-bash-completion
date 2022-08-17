@@ -9,7 +9,7 @@ _vboxmanage_vmname()
     else  # vmname
         res=$( $CMD1 list vms | sed 's/{[^}]\+}$//' )
     fi
-    WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END{ 
+    WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END { 
             if (isarray(a)) { 
                 if (length(a) == 1) print " "
                 len=length(i)
@@ -117,11 +117,12 @@ _vboxmanage()
     elif (( COMP_CWORD == 1 )); then
         _vboxmanage_subcommands
 
-    elif [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
+    elif [[ -z $CUR ]] && 
+        [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
         _vboxmanage_vmname vmname
 
-    elif [[ $PREV == --snapshot ]] || 
-         [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
+    elif [[ -z $CUR ]] && [[ $PREV == --snapshot || 
+         $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_vmname snapshot-name
     
     elif [[ $PREV =~ ^- ]]; then
