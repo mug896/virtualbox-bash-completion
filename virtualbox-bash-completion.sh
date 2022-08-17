@@ -37,7 +37,7 @@ _vboxmanage_number()
 _vboxmanage_double_quotes()
 {
     if [[ $PREV == --snapshot ]] || 
-       [[ $subComRaw =~ ${PREV}[^\ $'\n']*\ +"<snapshot-name" ]]
+       [[ $subComRaw =~ ${PREV}[$' \n']*\ +"<snapshot-name" ]]
     then
         WORDS=$( $CMD1 snapshot "${COMP_WORDS[2]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
     else
