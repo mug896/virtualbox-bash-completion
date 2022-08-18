@@ -19,8 +19,9 @@ _vboxmanage_vmname()
     WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END { 
             if (isarray(a)) { 
                 if (length(a) == 1) print " "
-                len=length(i)
-                for (i in a) printf "%0*d) %s\n", len, i+1, a[i]
+                len = length(i)
+                for (i in a)
+                    printf "%0*d) %s\n", len, i+1, a[i]
             }}')
     _vboxmanage_vmname=$1$'\n'$WORDS
     IFS=$'\n' COMPREPLY=( $WORDS )
