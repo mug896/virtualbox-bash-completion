@@ -23,16 +23,10 @@ controlvm         getextradata      modifymedium      snapshot
 convertfromraw    guestcontrol      modifyvm          startvm  
 ```
 
-[![Imgur](http://i.imgur.com/BidMGg7.png?2)](https://www.youtube.com/watch?v=YfjOxnAaiys)
-
 ## Installation
 
 Copy contents of virtualbox-bash-completion.sh to ~/.bash_completion  
-open new terminal and try completion
-
-#### or
-
-**cp** virtualbox-bash-completion.sh  /etc/bash_completion.d
+open new terminal and try completion !
 
 ## Usage
 
