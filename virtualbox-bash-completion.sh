@@ -21,7 +21,7 @@ _vboxmanage_vmname()
                 len = length(i)
                 for (i in a)
                     printf "%0*d) %s\n", len, i+1, a[i]
-                if (length(a) == 1) print " "
+                if (len == 1) print " "
             }}')
     _vboxmanage_vmname=$1$'\n'$WORDS
     IFS=$'\n' COMPREPLY=( $WORDS )
