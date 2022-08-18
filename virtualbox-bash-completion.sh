@@ -120,7 +120,7 @@ unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
     if [[ -n $subcommand ]]; then
         if [[ $CMD2 == guestcontrol ]]; then
             HELP=$( echo "$HELP" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
-                -e '/^[ ]*[[:alnum:]\|-]*\b'$subcommand'\b/,/^$/p' )
+                -e '/^[ ]*[[:alnum:]\|]*\b'$subcommand'\b/,/^$/p' )
             HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
         else 
             HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.*[ |]'$subcommand'\b.*/,/^$/p' )
