@@ -114,7 +114,7 @@ _vboxmanage_get_options_sub()
     if [[ $CMD2 == @(debugvm|guestcontrol|snapshot) ]]; then
         subcommand=${COMP_WORDS[i+1]}
     elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
-        unattended|usbdevsource|usbfilter) ]]; then
+unattended|usbdevsource|usbfilter) ]]; then
         subcommand=${COMP_WORDS[i]}
     fi
     if [[ -n $subcommand ]]; then
