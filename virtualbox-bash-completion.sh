@@ -114,7 +114,7 @@ _vboxmanage_get_options_sub()
     if [[ $CMD2 == @(debugvm|guestcontrol|snapshot) ]]; then
         subcommand=${COMP_WORDS[i+1]}
     elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
-unattended|usbdevsource|usbfilter) ]]; then
+unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
         subcommand=${COMP_WORDS[i]}
     fi
     if [[ -n $subcommand ]]; then
@@ -143,7 +143,7 @@ _vboxmanage_subcommand()
 _vboxmanage_get_options() 
 {
     if [[ $CMD2 == @(debugvm|dhcpserver|extpack|guestcontrol|guestproperty|hostonlyif|\
-metrics|natnetwork|snapshot|unattended|usbdevsource|usbfilter) ]]; then
+metrics|natnetwork|snapshot|unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
         _vboxmanage_get_options_sub $CMD2
 
     elif [[ $CMD2 == cloud ]]; then
