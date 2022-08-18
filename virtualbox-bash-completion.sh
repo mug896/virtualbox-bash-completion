@@ -126,7 +126,7 @@ _vboxmanage_get_options_sub()
 removedirectory|removefile|rm|mv|move|rename|mktemp|createtemporary|stat) ]] &&
             HELP+=" --username --domain --password --passwordfile"
         else 
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.* '$subcommand'\b.*/,/^$/p' )
+            HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.*[ |]'$subcommand'\b.*/,/^$/p' )
         fi
     fi
 }
