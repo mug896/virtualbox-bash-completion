@@ -4,42 +4,39 @@ _vboxmanage_index()
         [[ ${COMP_WORDS[i++]} == $1 ]] && break
     done
 }
-_vboxmanage_vmname()
+_vboxmanage_list()
 {
-    local res
+    local title=$1 medium=$2 res
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
-    if [[ $1 == snapshot-name ]]; then
+    if [[ $title == snapshot-name ]]; then
         _vboxmanage_index snapshot
-        res=$( $CMD1 snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
+        res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
+    elif [[ $title == filename ]]; then
+        case $medium in
+            dvds|floppies) res=$( $CMD list $medium | sed -En '/^Location: */{ s///p }' ) ;;
+            *) res=$( $CMD list hdds | sed -En '/^Type:\s+normal\s+\(base\)/{ n; s/Location: *//p }') ;;
+        esac
     else  # vmname
-        res=$( $CMD1 list vms | sed 's/{[^}]\+}$//' )
+        res=$( $CMD list vms | sed -E 's/.*"([^"]*)".*/\1/' )
     fi
-    WORDS=$( echo "$res" | gawk '{ a[i++] = $0 } END { 
+    WORDS=$( echo "$res" | gawk '/[[:graph:]]/{ a[i++] = $0 } END { 
             if (isarray(a)) { 
                 len = length(i)
                 for (i in a)
                     printf "%0*d) %s\n", len, i+1, a[i]
                 if (length(a) == 1) print " "
             }}')
-    _vboxmanage_vmname=$1$'\n'$WORDS
+    _vboxmanage_list=$WORDS
     IFS=$'\n' COMPREPLY=( $WORDS )
 }
 
 _vboxmanage_number()
 {
-    local title=${_vboxmanage_vmname%%$'\n'*}
-    local value=${_vboxmanage_vmname#*$'\n'}
-    
     CUR=$(( 10#$CUR ))
-    if [[ $title == vmname ]]; then
-        COMPREPLY=$( echo "$value" \
-            | gawk $CUR' == $1+0 {print $2; exit}' FPAT='[^ ]+|"[^"]+"' )
-    else  # snapshot-name
-        COMPREPLY=$( echo "$value" \
-            | gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print "\""$0"\""; exit}' )
-    fi
+    COMPREPLY=$( echo "$_vboxmanage_list" | 
+        gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print "\""$0"\""; exit}' )
 }
 
 _vboxmanage_double_quotes()
@@ -47,9 +44,9 @@ _vboxmanage_double_quotes()
     if [[ $PREV == --snapshot ]] || 
        [[ $HELP =~ ${PREV}[$' \n']*\ +"<snapshot-name" ]]; then
         _vboxmanage_index snapshot
-        WORDS=$( $CMD1 snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
+        WORDS=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\\"\1\\"/p' )
     else
-        WORDS=$( $CMD1 list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
+        WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\\"\1\\"/' )
     fi
     IFS=$'\n' COMPREPLY=( $(compgen -W "$WORDS" -- \\\"$CUR) )
 }
@@ -209,7 +206,7 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     set -o noglob
-    local CMD1=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]}
+    local CMD=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS idx2
     for (( idx2 = 1; idx2 < COMP_CWORD; idx2++)) do
@@ -220,11 +217,11 @@ _vboxmanage()
         esac
     done
     [[ ${COMP_WORDS[idx2]} != $CUR ]] && CMD2=${COMP_WORDS[idx2]}
-    local HELP=$($CMD1 $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
+    local HELP=$($CMD $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
     if [[ $PREV == --settingspwfile ]]; then :
 
-    elif [[ $CUR == +([0-9]) && -n $_vboxmanage_vmname ]]; then
+    elif [[ $CUR == +([0-9]) && -n $_vboxmanage_list ]]; then
         _vboxmanage_number
 
     elif [[ $CMD2 == internalcommands && $PREV == internalcommands ]]; then
@@ -235,7 +232,7 @@ _vboxmanage()
         _vboxmanage_get_options
     
     elif [[ $PREV == --ostype ]]; then
-        WORDS=$( $CMD1 list ostypes | sed -En 's/^ID:\s+//p' )
+        WORDS=$( $CMD list ostypes | sed -En 's/^ID:\s+//p' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
     
     elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
@@ -246,11 +243,18 @@ _vboxmanage()
 
     elif [[ -z $CUR ]] && 
         [[ $HELP =~ ${PREV}[^$' \n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
-        _vboxmanage_vmname vmname
+        _vboxmanage_list vmname
 
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || 
          $HELP =~ ${PREV}[^$' \n']*\ +"<snapshot-name" ]]; then
-        _vboxmanage_vmname snapshot-name
+        _vboxmanage_list snapshot-name
+
+    elif [[ -z $CUR ]] && [[ $PREV == @(--disk|--dvd|--floppy) || 
+         $HELP =~ ${PREV}[^$' \n']*\ +"<uuid|filename>" ]]; then
+         if [[ $PREV == @(dvd|--dvd) || $PREV2 == dvd ]]; then PREV=dvds
+         elif [[ $PREV == @(floppy|--floppy) || $PREV2 == floppy ]]; then PREV=floppies
+         else PREV=hdds; fi
+        _vboxmanage_list filename $PREV
     
     elif [[ $PREV == -* ]]; then
         _vboxmanage_get_options value
