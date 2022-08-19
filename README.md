@@ -32,5 +32,5 @@ open new terminal and try completion !
 
 **vmname, snapname** completion start with <kbd>"</kbd> character  
 
-You can see virtualbox command usage  
+You can see virtualbox command usage with
 > vboxmanage command [enter]
