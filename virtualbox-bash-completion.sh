@@ -207,6 +207,8 @@ _vboxmanage_get_words()
     if [[ -z $subcommand && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
+    elif [[ $CMD2 == bandwidthctl ]]; then
+        [[ -n $subcommand ]] && return
     else  # else_words
         WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
             -e ':Y s/'$subcommand'\b//; :X p; n; /^[ ]{'$n'}'$subcommand'\b/bY;' \
