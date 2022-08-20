@@ -208,9 +208,9 @@ _vboxmanage_get_words()
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
     else  # else_words
-        WORDS=$( echo $HELP2 | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
+        WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
             -e ':Y s/'$subcommand'\b//; :X p; n; /^[ ]{'$n'}'$subcommand'\b/bY;' \
-            -e '/^[ ]{'$n'}\w/Q; bX }' | _vboxmanage_words )
+            -e '/^[ ]{'$n'}\w/Q; bX }' | echo $(cat) | _vboxmanage_words )
     fi
 }
 _vboxmanage_else_words()
