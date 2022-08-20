@@ -63,7 +63,7 @@ _vboxmanage_options()
     if [[ $1 == value ]]; then
         WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]+).*/\1/; tX; d' \
-                     -e ':X / --?[[:alnum:]]+|\a/d; s/[^[:alnum:]-]/\n/g' )
+                     -e ':X s/ --?[[:alnum:]]+|\a//g; s/[^[:alnum:]-]/\n/g' )
 #        [[ -z $WORDS ]] && _vboxmanage_else_words
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
