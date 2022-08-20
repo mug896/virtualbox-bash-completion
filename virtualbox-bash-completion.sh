@@ -225,8 +225,10 @@ setextradata|snapshot|unattended|usbdevsource|usbfilter) ]]; then
 
     else # list mediumio mediumproperty sharedfolder
         WORDS=$( echo $HELP | _vboxmanage_words )
-        [[ $CMD2 == @(mediumproperty|showmediuminfo) ]] && WORDS+=" disk dvd floppy"
-
+        if [[ $CMD2 == showmediuminfo ]]; then  WORDS=" disk dvd floppy"
+        elif [[ $CMD2 == mediumproperty ]]; then 
+            [[ ${COMP_WORDS[2]} != @(disk|dvd|floppy) ]] && WORDS=" disk dvd floppy"
+        fi
     fi
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 }
