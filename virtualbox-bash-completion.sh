@@ -71,6 +71,16 @@ _vboxmanage_options()
         elif [[ $CMD2 == internalcommands && $PREV != internalcommands ]]; then
             _vboxmanage_index internalcommands
             WORDS=$( sed -En '/^ *'"${COMP_WORDS[i]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
+        elif [[ $CMD2 == mediumio ]]; then
+            if [[ -z $subcommand ]]; then
+                WORDS="--disk= --dvd= --floppy= --password-file="
+            else
+                case $subcommand in
+                    formatfat) WORDS=" --quick" ;;
+                    cat) WORDS=" --hex --offset= --size= --output=" ;;
+                    stream) WORDS=" --format= --variant= --output=" ;;
+                esac
+            fi
         else
             WORDS=$( sed -En 's/\b[0-9]+-([0-9]+|N)//ig; p' | eval "$GREP" )
         fi
@@ -135,8 +145,10 @@ _vboxmanage_subcommand()
 unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
         [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
-    elif [[ $CMD2 == list ]]; then
-        while [[ ${COMP_WORDS[i]} == -* ]]; do let i++; done
+    elif [[ $CMD2 == @(list|mediumio) ]]; then
+        while [[ ${COMP_WORDS[i]} == -* ]]; do 
+            [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i++
+        done
         [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == mediumproperty ]]; then
