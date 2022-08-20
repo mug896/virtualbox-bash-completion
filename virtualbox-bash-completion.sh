@@ -62,7 +62,7 @@ _vboxmanage_options()
 {
     if [[ $1 == value ]]; then
         WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
-                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]+).*/\1/; tX; d' \
+                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*).*/\1/; tX; d' \
                      -e ':X s/ --?[[:alnum:]]+|\a//g; s/[^[:alnum:]-]/\n/g' )
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
@@ -208,7 +208,7 @@ _vboxmanage_get_words()
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
     else  # else_words
-        WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
+        WORDS=$( echo $HELP2 | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
             -e ':Y s/'$subcommand'\b//; :X p; n; /^[ ]{'$n'}'$subcommand'\b/bY;' \
             -e '/^[ ]{'$n'}\w/Q; bX }' | _vboxmanage_words )
     fi
