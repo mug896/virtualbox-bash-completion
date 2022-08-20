@@ -273,7 +273,7 @@ _vboxmanage()
          else PREV=hdds; fi
         _vboxmanage_list filename $PREV
     
-    elif [[ $PREV == -* ]]; then
+    elif [[ $PREV == -* && $CMD2 != list ]]; then
         _vboxmanage_get_options value
 
     else
