@@ -127,15 +127,30 @@ unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
 }
 _vboxmanage_subcommand()
 {
+    local i
+    _vboxmanage_index "$CMD2"
+    if [[ $CMD2 == @(debugvm|guestcontrol|snapshot|controlvm|bandwidthctl) ]]; then
+        [[ $CUR != ${COMP_WORDS[i+1]} ]] && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
+
+    elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
+unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
+        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+
+    elif [[ $CMD2 == list ]]; then
+        while [[ ${COMP_WORDS[i]} == -* ]]; do let i++; done
+        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+
+    elif [[ $CMD2 == mediumproperty ]]; then
+        [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i++
+        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+
+    elif [[ $CMD2 == convertfromraw ]]; then
+        [[ ${COMP_WORDS[i]} == stdin ]] && subcommand=${COMP_WORDS[i]}
+    fi
     HELP2=$( echo "$HELP" | perl -pe 's/(VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?)/" " x length($1)/e' )
     n=$( echo "$HELP" | awk 'BEGIN{ min=100 }
         match($0, /^ *[^ ]/) { if (RLENGTH > 10 && RLENGTH < min) min = RLENGTH } 
         END { print --min }' )
-    _vboxmanage_index "$CMD2"
-    if [[ $CMD2 != setproperty ]]; then
-        [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i+=2 || let i++
-    fi
-    [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
 }
 _vboxmanage_get_options() 
 {
