@@ -132,7 +132,9 @@ _vboxmanage_subcommand()
         match($0, /^ *[^ ]/) { if (RLENGTH > 10 && RLENGTH < min) min = RLENGTH } 
         END { print --min }' )
     _vboxmanage_index "$CMD2"
-    [[ $CMD2 != setproperty ]] && let i++
+    if [[ $CMD2 != setproperty ]]; then
+        [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i+=2 || let i++
+    fi
     [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
 }
 _vboxmanage_get_options() 
@@ -176,7 +178,7 @@ _vboxmanage_get_words()
 {
     local HELP2 n subcommand
     _vboxmanage_subcommand
-    if [[ -z $subcommand && ($PREV2 == $CMD2 || $PREV == $CMD2) ]]; then
+    if [[ -z $subcommand && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
     else  # else_words
