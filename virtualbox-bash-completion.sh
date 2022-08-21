@@ -129,27 +129,29 @@ _vboxmanage_subcommand()
     local i
     _vboxmanage_index "$CMD2"
     if [[ $CMD2 == @(debugvm|snapshot|controlvm|bandwidthctl) ]]; then
-        [[ $CUR != ${COMP_WORDS[i+1]} ]] && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
+        (( i + 1 != COMP_CWORD )) && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
 
     elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
 unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
-        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == guestcontrol ]]; then let i++
-        while [[ $CUR != ${COMP_WORDS[i]} && ${COMP_WORDS[i]} == -* ]]; do 
-            [[ ${COMP_WORDS[i]} == @(-v|--verbose|-q|--quiet) ]] && let i++ || let i+=2
+        while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
+            [[ ${COMP_WORDS[i]} == @(-v|--verbose|-q|--quiet) ]] && let i++ || {
+                [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i+=2
+            }
         done
-        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == @(list|mediumio) ]]; then
-        while [[ ${COMP_WORDS[i]} == -* ]]; do 
+        while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
             [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i++
         done
-        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == mediumproperty ]]; then
         [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i++
-        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == convertfromraw ]]; then
         [[ ${COMP_WORDS[i]} == stdin ]] && subcommand=${COMP_WORDS[i]}
