@@ -54,8 +54,8 @@ _vboxmanage_options()
 {
     if [[ $1 == value ]]; then
         WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; tR :R ' \
-                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|]*).*/\1/; tX; d' \
-                     -e ':X s/[^[:alnum:]-]/\n/g' )
+                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|_]*).*/\1/; tX; d' \
+                     -e ':X s/[^[:alnum:]_-]/\n/g' )
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
         if [[ -z $CMD2 ]]; then
