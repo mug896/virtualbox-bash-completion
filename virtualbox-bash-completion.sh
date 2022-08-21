@@ -82,13 +82,15 @@ _vboxmanage_get_options_cloud()
 {
     if [[ $1 == profile ]]; then
         if [[ -n $SCMD ]]; then
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloudprofile .*'"$SCMD"'.*/,/^$/p' | sed -E 's/--provider=|--profile=//g' )
+            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloudprofile .*'"$SCMD"'.*/,/^$/p' |
+                    sed -E 's/--provider=|--profile=//g' )
         else
             HELP=" --provider= --profile="
         fi
     else
         if [[ -n $SCMD && -n $SCMD2 ]]; then
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloud .*'"$SCMD $SCMD2"'.*/,/^$/p' | sed -E 's/--provider=|--profile=//g' )
+            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloud .*'"$SCMD $SCMD2"'.*/,/^$/p' |
+                    sed -E 's/--provider=|--profile=//g' )
         else
             HELP=" --provider= --profile="
         fi
