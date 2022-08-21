@@ -244,7 +244,7 @@ _vboxmanage_else_words()
     elif [[ $CMD2 == @(${set2//+([$' \n'])/|}) ]]; then
         WORDS=$( echo "$HELP" | 
             sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' \
-                -e ':X s/\|/ /g; p' )
+                    -e ':X s/\|/ /g; p' )
 
     else # list mediumio mediumproperty sharedfolder
         WORDS=$( echo $HELP | _vboxmanage_words )
