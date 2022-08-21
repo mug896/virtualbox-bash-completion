@@ -126,16 +126,15 @@ _vboxmanage_get_options_sub()
 }
 _vboxmanage_subcommand()
 {
-    local i
-    _vboxmanage_index "$CMD2"
+    local i=$(( idx2 + 1 ))
     local set="dhcpserver extpack guestproperty hostonlyif metrics natnetwork unattended
             usbdevsource setproperty usbfilter sharedfolder"
 
     if [[ $CMD2 == @(debugvm|snapshot|controlvm|bandwidthctl) ]]; then
-        (( i + 1 != COMP_CWORD )) && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
+        (( i + 1 < COMP_CWORD )) && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
 
     elif [[ $CMD2 == @(${set//+([$' \n'])/|}) ]]; then
-        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i < COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == guestcontrol ]]; then let i++
         while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
@@ -143,17 +142,17 @@ _vboxmanage_subcommand()
                 [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i+=2
             }
         done
-        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i < COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == @(list|mediumio) ]]; then
         while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
             [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i++
         done
-        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i < COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == mediumproperty ]]; then
         [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i++
-        (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
+        (( i < COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == convertfromraw ]]; then
         [[ ${COMP_WORDS[i]} == stdin ]] && subcommand=${COMP_WORDS[i]}
@@ -227,8 +226,11 @@ _vboxmanage_else_words()
 
     local ifsubcset="usbfilter usbdevsource unattended snapshot sharedfolder natnetwork 
         metrics mediumio list hostonlyif guestproperty guestcontrol extpack dhcpserver
-        debugvm convertfromraw cloud cloudprofile bandwidthctl"
+        debugvm convertfromraw cloud cloudprofile bandwidthctl mediumproperty"
     [[ -n $subcommand && $CMD2 == @(${ifsubcset//+([$' \n'])/|}) ]] && return
+
+    [[ $CMD2 == @(showmediuminfo|modifymedium|createmedium|closemedium|clonemedium) &&
+        ${COMP_WORDS[idx2 + 1]} == @(disk|dvd|floppy) ]] && return
 
     local set1="bandwidthctl clonemedium closemedium controlvm convertfromraw
         createmedium guestcontrol hostonlyif metrics setproperty modifymedium"
@@ -247,7 +249,7 @@ _vboxmanage_else_words()
         WORDS=$( echo $HELP | _vboxmanage_words )
         if [[ $CMD2 == showmediuminfo ]]; then  WORDS=" disk dvd floppy"
         elif [[ $CMD2 == mediumproperty ]]; then 
-            [[ ${COMP_WORDS[2]} != @(disk|dvd|floppy) ]] && WORDS=" disk dvd floppy"
+            [[ ${COMP_WORDS[idx2 + 1]} != @(disk|dvd|floppy) ]] && WORDS=" disk dvd floppy"
         fi
     fi
     COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
@@ -258,15 +260,13 @@ _vboxmanage()
     set -o noglob
     local CMD=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]} subcommand
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
-    local IFS=$' \t\n' WORDS idx2
-    for (( idx2 = 1; idx2 < COMP_CWORD; idx2++)) do
-        case ${COMP_WORDS[idx2]} in 
-            -q|--nologo|@*) ;;
-            --settingspw|--settingspwfile) let idx2++ ;;
-            *) break ;;
-        esac
+    local IFS=$' \t\n' WORDS idx2=1
+    while [[ $idx2 -lt $COMP_CWORD && ${COMP_WORDS[idx2]} == -* ]]; do 
+        [[ ${COMP_WORDS[idx2]} == @(-q|--nologo|@*) ]] && let idx2++ || {
+            [[ ${COMP_WORDS[idx2+1]} == "=" ]] && let idx2+=3 || let idx2+=2
+        }
     done
-    [[ ${COMP_WORDS[idx2]} != $CUR ]] && CMD2=${COMP_WORDS[idx2]}
+    (( idx2 < COMP_CWORD )) && CMD2=${COMP_WORDS[idx2]}
     [[ -n $CMD2 ]] && _vboxmanage_subcommand
     local HELP=$($CMD $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
