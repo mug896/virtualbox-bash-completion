@@ -62,7 +62,7 @@ _vboxmanage_options()
 {
     if [[ $1 == value ]]; then
         WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
-            -e 'tR :R s/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|-]*).*/\1/; tX; d' \
+            -e 'tR :R s/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|]*).*/\1/; tX; d' \
                      -e ':X s/[^[:alnum:]-]/\n/g' )
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
@@ -115,27 +115,38 @@ _vboxmanage_get_options_cloud()
 }
 _vboxmanage_get_options_sub()
 {
-    local HELP2 n subcommand
-    _vboxmanage_subcommand
-    if [[ -n $subcommand ]]; then
-        if [[ $CMD2 == guestcontrol ]]; then
+    if [[ $CMD2 == guestcontrol ]]; then
+        if [[ -n $subcommand ]]; then
             HELP=$( echo "$HELP" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
                 -e '/^[ ]*[[:alnum:]\|]*\b'$subcommand'\b/,/^$/p' )
-            HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
-        else 
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.*[ |]'$subcommand'\b.*/,/^$/p' )
+        else
+            HELP=""
         fi
+        if [[ $subcommand == @(list|closeprocess|closesession|updatega|\
+            updateguestadditions|updateadditions|watch) ]]; then
+            HELP+=" -v --verbose -q --quiet"
+        else
+            HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
+        fi
+    elif [[ -n $subcommand ]]; then
+        HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.*[ |]'$subcommand'\b.*/,/^$/p' )
     fi
 }
 _vboxmanage_subcommand()
 {
     local i
     _vboxmanage_index "$CMD2"
-    if [[ $CMD2 == @(debugvm|guestcontrol|snapshot|controlvm|bandwidthctl) ]]; then
+    if [[ $CMD2 == @(debugvm|snapshot|controlvm|bandwidthctl) ]]; then
         [[ $CUR != ${COMP_WORDS[i+1]} ]] && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
 
     elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
 unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
+        [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
+
+    elif [[ $CMD2 == guestcontrol ]]; then let i++
+        while [[ $CUR != ${COMP_WORDS[i]} && ${COMP_WORDS[i]} == -* ]]; do 
+            [[ ${COMP_WORDS[i]} == @(-v|--verbose|-q|--quiet) ]] && let i++ || let i+=2
+        done
         [[ $CUR != ${COMP_WORDS[i]} ]] && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == @(list|mediumio) ]]; then
@@ -151,6 +162,9 @@ unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
     elif [[ $CMD2 == convertfromraw ]]; then
         [[ ${COMP_WORDS[i]} == stdin ]] && subcommand=${COMP_WORDS[i]}
     fi
+}
+_vboxmanage_HELP2()
+{
     HELP2=$( echo "$HELP" | perl -pe 's/(VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?)/" " x length($1)/e' )
     n=$( echo "$HELP" | awk 'BEGIN{ min=100 }
         match($0, /^ *[^ ]/) { if (RLENGTH > 10 && RLENGTH < min) min = RLENGTH } 
@@ -160,7 +174,6 @@ _vboxmanage_get_options()
 {
     if [[ $CMD2 == @(debugvm|dhcpserver|extpack|guestcontrol|guestproperty|hostonlyif|\
 metrics|natnetwork|snapshot|unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
-        [[ $CMD2 == guestcontrol && $PREV2 == guestcontrol ]] && return
         _vboxmanage_get_options_sub
 
     elif [[ $CMD2 == cloud ]]; then
@@ -170,8 +183,8 @@ metrics|natnetwork|snapshot|unattended|usbdevsource|usbfilter|sharedfolder) ]]; 
         _vboxmanage_get_options_cloud profile
 
     else
-        local HELP2 n subcommand
-        _vboxmanage_subcommand
+        local HELP2 n
+        _vboxmanage_HELP2
         if [[ -n $subcommand && $CMD2 == @(controlvm|bandwidthctl) ]]; then
             HELP=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
                 -e ':Y s/'$subcommand'\b//; :X p; n; /^[ ]{'$n'}'$subcommand'\b/bY;' \
@@ -196,8 +209,8 @@ _vboxmanage_words()
 }
 _vboxmanage_get_words()
 {
-    local HELP2 n subcommand
-    _vboxmanage_subcommand
+    local HELP2 n
+    _vboxmanage_HELP2
     if [[ -z $subcommand && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
@@ -232,7 +245,7 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     set -o noglob
-    local CMD=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]}
+    local CMD=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]} subcommand
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS idx2
     for (( idx2 = 1; idx2 < COMP_CWORD; idx2++)) do
@@ -243,6 +256,7 @@ _vboxmanage()
         esac
     done
     [[ ${COMP_WORDS[idx2]} != $CUR ]] && CMD2=${COMP_WORDS[idx2]}
+    [[ -n $CMD2 ]] && _vboxmanage_subcommand
     local HELP=$($CMD $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
     if [[ $PREV == --settingspwfile ]]; then :
@@ -282,7 +296,7 @@ _vboxmanage()
          else PREV=hdds; fi
         _vboxmanage_list filename $PREV
     
-    elif [[ $PREV == -* && $CMD2 != list ]]; then
+    elif [[ $PREV == -* && $CMD2 != list && ! ($CMD2 == guestcontrol && -z $subcommand) ]]; then
         _vboxmanage_get_options value
 
     else
