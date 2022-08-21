@@ -114,8 +114,8 @@ _vboxmanage_get_options_sub()
         else
             HELP=""
         fi
-        if [[ $subcommand == @(list|closeprocess|closesession|updatega|\
-            updateguestadditions|updateadditions|watch) ]]; then
+        local set="list closeprocess closesession updatega updateguestadditions updateadditions watch"
+        if [[ $subcommand == @(${set//+([$' \n'])/|}) ]]; then
             HELP+=" -v --verbose -q --quiet"
         else
             HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
@@ -128,11 +128,13 @@ _vboxmanage_subcommand()
 {
     local i
     _vboxmanage_index "$CMD2"
+    local set="dhcpserver extpack guestproperty hostonlyif metrics natnetwork unattended
+            usbdevsource setproperty usbfilter sharedfolder"
+
     if [[ $CMD2 == @(debugvm|snapshot|controlvm|bandwidthctl) ]]; then
         (( i + 1 != COMP_CWORD )) && subcommand=${COMP_WORDS[i+1]%%+([0-9])}
 
-    elif [[ $CMD2 == @(dhcpserver|extpack|guestproperty|hostonlyif|metrics|natnetwork|\
-unattended|usbdevsource|setproperty|usbfilter|sharedfolder) ]]; then
+    elif [[ $CMD2 == @(${set//+([$' \n'])/|}) ]]; then
         (( i != COMP_CWORD )) && subcommand=${COMP_WORDS[i]%%+([0-9])}
 
     elif [[ $CMD2 == guestcontrol ]]; then let i++
@@ -166,8 +168,10 @@ _vboxmanage_HELP2()
 }
 _vboxmanage_get_options() 
 {
-    if [[ $CMD2 == @(debugvm|dhcpserver|extpack|guestcontrol|guestproperty|hostonlyif|\
-metrics|natnetwork|snapshot|unattended|usbdevsource|usbfilter|sharedfolder) ]]; then
+    local set="debugvm dhcpserver extpack guestcontrol guestproperty hostonlyif
+        metrics natnetwork snapshot unattended usbdevsource usbfilter sharedfolder"
+
+    if [[ $CMD2 == @(${set//+([$' \n'])/|}) ]]; then
         _vboxmanage_get_options_sub
 
     elif [[ $CMD2 == cloud ]]; then
@@ -208,8 +212,6 @@ _vboxmanage_get_words()
     if [[ -z $subcommand && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
         WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
-    elif [[ $CMD2 == bandwidthctl ]]; then
-        [[ -n $subcommand ]] && return
     else  # else_words
         WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$subcommand'\b/{ ' \
             -e ':Y s/'$subcommand'\b//; :X p; n; /^[ ]{'$n'}'$subcommand'\b/bY;' \
@@ -218,13 +220,28 @@ _vboxmanage_get_words()
 }
 _vboxmanage_else_words()
 {
-    if [[ $CMD2 == @(bandwidthctl|clonemedium|closemedium|controlvm|convertfromraw|\
-createmedium|guestcontrol|hostonlyif|metrics|movevm|setproperty|modifymedium) ]]; then
+    local noneed="storagectl storageattach startvm showvminfo registervm movevm 
+        modifyvm import export encryptmedium discardstate createvm clonevm 
+        checkmediumpwd adoptstate"
+    [[ $CMD2 == @(${noneed//+([$' \n'])/|}) ]] && return
+
+    local ifsubcset="usbfilter usbdevsource unattended snapshot sharedfolder natnetwork 
+        metrics mediumio list hostonlyif guestproperty guestcontrol extpack dhcpserver
+        debugvm convertfromraw cloud cloudprofile bandwidthctl"
+    [[ -n $subcommand && $CMD2 == @(${ifsubcset//+([$' \n'])/|}) ]] && return
+
+    local set1="bandwidthctl clonemedium closemedium controlvm convertfromraw
+        createmedium guestcontrol hostonlyif metrics setproperty modifymedium"
+
+    local set2="dhcpserver extpack getextradata debugvm guestproperty natnetwork
+        setextradata snapshot unattended usbdevsource usbfilter"
+
+    if [[ $CMD2 == @(${set1//+([$' \n'])/|}) ]]; then
         _vboxmanage_get_words
 
-    elif [[ $CMD2 == @(dhcpserver|extpack|getextradata|debugvm|guestproperty|natnetwork|\
-setextradata|snapshot|unattended|usbdevsource|usbfilter) ]]; then
-        WORDS=$( echo "$HELP" | sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' -e ':X s/\|/ /g; p' )
+    elif [[ $CMD2 == @(${set2//+([$' \n'])/|}) ]]; then
+        WORDS=$( echo "$HELP" | 
+            sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' -e ':X s/\|/ /g; p' )
 
     else # list mediumio mediumproperty sharedfolder
         WORDS=$( echo $HELP | _vboxmanage_words )
