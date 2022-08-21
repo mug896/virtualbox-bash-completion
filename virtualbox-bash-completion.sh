@@ -243,7 +243,8 @@ _vboxmanage_else_words()
 
     elif [[ $CMD2 == @(${set2//+([$' \n'])/|}) ]]; then
         WORDS=$( echo "$HELP" | 
-            sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' -e ':X s/\|/ /g; p' )
+            sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' \
+                -e ':X s/\|/ /g; p' )
 
     else # list mediumio mediumproperty sharedfolder
         WORDS=$( echo $HELP | _vboxmanage_words )
@@ -290,8 +291,8 @@ _vboxmanage()
         _vboxmanage_double_quotes
 
     elif [[ -z $CMD2 ]]; then
-        WORDS=$( echo "$HELP" |
-            tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
+        WORDS=$( echo "$HELP" | tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') \
+            >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
     elif [[ -z $CUR ]] && 
