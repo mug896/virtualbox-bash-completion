@@ -227,10 +227,10 @@ _vboxmanage_else_words()
         checkmediumpwd adoptstate"
     [[ $CMD2 == @(${noneed//+([$' \n'])/|}) ]] && return
 
-    local ifsubcset="usbfilter usbdevsource unattended snapshot sharedfolder natnetwork 
+    local ifscmdset="usbfilter usbdevsource unattended snapshot sharedfolder natnetwork 
         metrics mediumio list hostonlyif guestproperty guestcontrol extpack dhcpserver
         debugvm convertfromraw cloudprofile bandwidthctl mediumproperty"
-    [[ -n $SCMD && $CMD2 == @(${ifsubcset//+([$' \n'])/|}) ]] && return
+    [[ -n $SCMD && $CMD2 == @(${ifscmdset//+([$' \n'])/|}) ]] && return
 
     [[ $CMD2 == cloud && -n $SCMD && -n $SCMD2 ]] && return
 
