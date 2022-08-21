@@ -50,14 +50,6 @@ _vboxmanage_double_quotes()
     fi
     IFS=$'\n' COMPREPLY=( $(compgen -W "$WORDS" -- \\\"$CUR) )
 }
-
-_vboxmanage_commands()
-{
-    WORDS=$( echo "$HELP" |
-        tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
-    COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
-}
-
 _vboxmanage_options() 
 {
     if [[ $1 == value ]]; then
@@ -279,7 +271,9 @@ _vboxmanage()
         _vboxmanage_double_quotes
 
     elif [[ -z $CMD2 ]]; then
-        _vboxmanage_commands
+        WORDS=$( echo "$HELP" |
+            tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
+        COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
     elif [[ -z $CUR ]] && 
         [[ $HELP =~ ${PREV}[^$' \n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
