@@ -53,8 +53,8 @@ _vboxmanage_double_quotes()
 _vboxmanage_options() 
 {
     if [[ $1 == value ]]; then
-        WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; s/'"VBoxManage $CMD2"'/\a/g' \
-                     -e 'tR :R s/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|]*).*/\1/; tX; d' \
+        WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; tR :R ' \
+                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]*]|[[:alnum:]|]*).*/\1/; tX; d' \
                      -e ':X s/[^[:alnum:]-]/\n/g' )
     else 
         local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
