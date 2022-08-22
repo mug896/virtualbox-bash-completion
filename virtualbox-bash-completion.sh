@@ -264,7 +264,8 @@ _vboxmanage()
 {
     trap 'set +o noglob' RETURN   
     set -o noglob
-    local CMD=$1 CMD2 CUR=$2 PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]} SCMD SCMD2
+    local CMD=$1 CMD2 SCMD SCMD2
+    local CUR=${COMP_WORDS[COMP_CWORD]} PREV=$3 PREV2=${COMP_WORDS[COMP_CWORD-2]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS idx2=1 idc
     while [[ $idx2 -lt $COMP_CWORD && ${COMP_WORDS[idx2]} == -* ]]; do 
