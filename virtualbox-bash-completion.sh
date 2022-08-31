@@ -48,7 +48,7 @@ _vboxmanage_double_quotes()
     else
         WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\1/' )
     fi
-    IFS=$'\n' COMPREPLY=( $(compgen -P '"' -S '"' -W "$WORDS" -- "$CUR") )
+    IFS=$'\n' COMPREPLY=( $(compgen -P \" -S \" -W "$WORDS" -- "$CUR") )
 }
 _vboxmanage_options() 
 {
