@@ -266,7 +266,7 @@ _vboxmanage()
     set -o noglob
     local CMD=$1 CMD2 SCMD SCMD2
     local CUR=${COMP_WORDS[COMP_CWORD]}
-    [[ ${COMP_LINE:COMP_POINT-1:1} = " " ]] && CUR=""
+    [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *$CUR* ]] && CUR=""
     local PREV=${COMP_WORDS[COMP_CWORD-1]} PREV2=${COMP_WORDS[COMP_CWORD-2]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS idx2=1 idc
@@ -279,8 +279,8 @@ _vboxmanage()
     [[ -n $CMD2 ]] && _vboxmanage_subcommand
     local HELP=$($CMD $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
 
-    if [[ $PREV == --settingspwfile ]]; then :
-
+    if [[ $PREV == --settingspwfile ]]; then
+        :
     elif [[ $CUR == +([0-9]) && -n $_vboxmanage_list ]]; then
         _vboxmanage_number
 
