@@ -262,7 +262,8 @@ _vboxmanage_else_words()
 }
 _vboxmanage() 
 {
-    trap 'set +o noglob' RETURN   
+    trap 'eval $reset_noglob' RETURN
+    local reset_noglob=$(shopt -po noglob)
     set -o noglob
     local CMD=$1 CMD2 SCMD SCMD2
     local CUR=${COMP_WORDS[COMP_CWORD]}
