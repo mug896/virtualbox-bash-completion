@@ -1,17 +1,18 @@
 _vboxmanage_index()
 {
+    local -n i=$1
     for ((i = 1; i < COMP_CWORD; )); do 
-        [[ ${COMP_WORDS[i++]} == $1 ]] && break
+        [[ ${COMP_WORDS[i++]} == $2 ]] && break
     done
 }
 _vboxmanage_list()
 {
-    local title=$1 medium=$2 res
+    local title=$1 medium=$2 res i
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
     if [[ $title == snapshot-name ]]; then
-        _vboxmanage_index snapshot
+        _vboxmanage_index i snapshot
         res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     elif [[ $title == filename ]]; then
         case $medium in
@@ -41,9 +42,10 @@ _vboxmanage_number()
 
 _vboxmanage_double_quotes()
 {
+    local i
     if [[ $PREV == --snapshot ]] || 
        [[ $HELP =~ ${PREV}[$' \n']*\ +"<snapshot-name" ]]; then
-        _vboxmanage_index snapshot
+        _vboxmanage_index i snapshot
         WORDS=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else
         WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\1/' )
@@ -52,6 +54,7 @@ _vboxmanage_double_quotes()
 }
 _vboxmanage_options() 
 {
+    local i
     if [[ $1 == value ]]; then
         WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; tR :R ' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]+]|\w[[:alnum:]|_-]*).*/\1/; tX; d' \
@@ -61,7 +64,7 @@ _vboxmanage_options()
         if [[ -z $CMD2 ]]; then
             WORDS=$( sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
         elif [[ $CMD2 == internalcommands && $PREV != internalcommands ]]; then
-            _vboxmanage_index internalcommands
+            _vboxmanage_index i internalcommands
             WORDS=$( sed -En '/^ *'"${COMP_WORDS[i]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
         elif [[ $CMD2 == mediumio ]]; then
             if [[ -z $SCMD ]]; then
