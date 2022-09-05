@@ -196,7 +196,7 @@ _vboxmanage_get_options()
     fi
 
     if [[ $arg == value ]]; then
-        _vboxmanage_options value <<< $(echo $HELP)
+        _vboxmanage_options value <<< $(set -f; echo $HELP)
     else
         _vboxmanage_options <<< $HELP
     fi
@@ -220,7 +220,7 @@ _vboxmanage_get_words()
     else  # else_words
         WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
             -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
-            -e '/^[ ]{'$n'}\w/Q; bX }' | echo $(cat) | _vboxmanage_words )
+            -e '/^[ ]{'$n'}\w/Q; bX }' | ( set -f; echo $(cat) ) | _vboxmanage_words )
     fi
 }
 _vboxmanage_else_words()
@@ -255,7 +255,7 @@ _vboxmanage_else_words()
                     -e ':X s/\|/ /g; p' )
 
     else # list mediumio mediumproperty sharedfolder
-        WORDS=$( echo $HELP | _vboxmanage_words )
+        WORDS=$( set -f; echo $HELP | _vboxmanage_words )
         if [[ $CMD2 == showmediuminfo ]]; then  WORDS=" disk dvd floppy"
         elif [[ $CMD2 == mediumproperty ]]; then 
             [[ ${COMP_WORDS[idx2 + 1]} != @(disk|dvd|floppy) ]] && WORDS=" disk dvd floppy"
@@ -265,9 +265,6 @@ _vboxmanage_else_words()
 }
 _vboxmanage() 
 {
-    trap 'eval $reset_noglob' RETURN
-    local reset_noglob=$(shopt -po noglob)
-    set -o noglob
     local CMD=$1 CMD2 SCMD SCMD2
     local CUR=${COMP_WORDS[COMP_CWORD]}
     [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *$CUR* ]] && CUR=""
