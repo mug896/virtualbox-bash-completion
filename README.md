@@ -26,7 +26,7 @@ convertfromraw    guestcontrol      modifyvm          startvm
 ## Installation
 
 Copy contents of virtualbox-bash-completion.sh to ~/.bash_completion  
-open new terminal and try completion !
+open new terminal and try auto completion !
 
 ## Usage
 
