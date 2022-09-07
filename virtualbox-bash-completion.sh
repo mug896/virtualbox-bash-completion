@@ -22,7 +22,7 @@ _vboxmanage_list()
     else  # vmname
         res=$( $CMD list vms | sed -E 's/.*"([^"]*)".*/\1/' )
     fi
-    WORDS=$( echo "$res" | gawk '/[[:graph:]]/{ a[i++] = $0 } END { 
+    WORDS=$( <<< $res gawk '/[[:graph:]]/{ a[i++] = $0 } END { 
             if (isarray(a)) { 
                 len = length(i)
                 for (i in a)
@@ -36,7 +36,7 @@ _vboxmanage_list()
 _vboxmanage_number()
 {
     CUR=$(( 10#$CUR ))
-    COMPREPLY=$( echo "$_vboxmanage_list" | 
+    COMPREPLY=$( <<< $_vboxmanage_list \
         gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print "\""$0"\""; exit}' )
 }
 
@@ -85,14 +85,14 @@ _vboxmanage_get_options_cloud()
 {
     if [[ $1 == profile ]]; then
         if [[ -n $SCMD ]]; then
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloudprofile .*'"$SCMD"'.*/,/^$/p' |
+            HELP=$( <<< $HELP sed -En '/VBoxManage cloudprofile .*'"$SCMD"'.*/,/^$/p' |
                     sed -E 's/--provider=|--profile=//g' )
         else
             HELP=" --provider= --profile="
         fi
     else
         if [[ -n $SCMD && -n $SCMD2 ]]; then
-            HELP=$( echo "$HELP" | sed -En '/VBoxManage cloud .*'"$SCMD $SCMD2"'.*/,/^$/p' |
+            HELP=$( <<< $HELP sed -En '/VBoxManage cloud .*'"$SCMD $SCMD2"'.*/,/^$/p' |
                     sed -E 's/--provider=|--profile=//g' )
         else
             HELP=" --provider= --profile="
@@ -103,7 +103,7 @@ _vboxmanage_get_options_sub()
 {
     if [[ $CMD2 == guestcontrol ]]; then
         if [[ -n $SCMD ]]; then
-            HELP=$( echo "$HELP" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
+            HELP=$( <<< $HELP sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
                 -e '/^[ ]*[[:alnum:]\|]*\b'$SCMD'\b/,/^$/p' )
         else
             HELP=""
@@ -115,7 +115,7 @@ _vboxmanage_get_options_sub()
             HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
         fi
     elif [[ -n $SCMD ]]; then
-        HELP=$( echo "$HELP" | sed -En '/VBoxManage '$CMD2'.*[ |]'$SCMD'\b.*/,/^$/p' )
+        HELP=$( <<< $HELP sed -En '/VBoxManage '$CMD2'.*[ |]'$SCMD'\b.*/,/^$/p' )
     fi
 }
 _vboxmanage_subcommand()
@@ -165,8 +165,8 @@ _vboxmanage_subcommand()
 }
 _vboxmanage_HELP2()
 {
-    HELP2=$( echo "$HELP" | perl -pe 's/(VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?)/" " x length($1)/e' )
-    n=$( echo "$HELP" | awk 'BEGIN{ min=100 }
+    HELP2=$( <<< $HELP perl -pe 's/(VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?)/" " x length($1)/e' )
+    n=$( <<< $HELP awk 'BEGIN{ min=100 }
         match($0, /^ *[^ ]/) { if (RLENGTH > 10 && RLENGTH < min) min = RLENGTH } 
         END { print --min }' )
 }
@@ -189,7 +189,7 @@ _vboxmanage_get_options()
         local HELP2 n
         _vboxmanage_HELP2
         if [[ -n $SCMD && $CMD2 == @(controlvm|bandwidthctl) ]]; then
-            HELP=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
+            HELP=$( <<< $HELP2 sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
                 -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
                 -e '/^[ ]{'$n'}\w/Q; bX }' )
         fi
@@ -215,10 +215,10 @@ _vboxmanage_get_words()
     local HELP2 n
     _vboxmanage_HELP2
     if [[ -z $SCMD && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
-        WORDS=$( echo "$HELP2" | sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
+        WORDS=$( <<< $HELP2 sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
             -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
     else  # else_words
-        WORDS=$( echo "$HELP2" | sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
+        WORDS=$( <<< $HELP2 sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
             -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
             -e '/^[ ]{'$n'}\w/Q; bX }' | ( set -f; echo $(cat) ) | _vboxmanage_words )
     fi
@@ -250,7 +250,7 @@ _vboxmanage_else_words()
         _vboxmanage_get_words
 
     elif [[ $CMD2 == @(${set2//+([$' \n'])/|}) ]]; then
-        WORDS=$( echo "$HELP" | 
+        WORDS=$( <<< $HELP \
             sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' \
                     -e ':X s/\|/ /g; p' )
 
@@ -286,7 +286,7 @@ _vboxmanage()
         _vboxmanage_number
 
     elif [[ $CMD2 == internalcommands && $PREV == internalcommands ]]; then
-        WORDS=$( echo "$HELP" | grep -Po '(?<=^  )([a-z]+)' )
+        WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
     elif [[ $CUR == -* ]]; then
@@ -300,7 +300,7 @@ _vboxmanage()
         _vboxmanage_double_quotes
 
     elif [[ -z $CMD2 ]]; then
-        WORDS=$( echo "$HELP" | tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') \
+        WORDS=$( <<< $HELP tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') \
             >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
         COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
 
