@@ -33,13 +33,23 @@ open new terminal and try completion !
 **vmname, snapname** completion start with <kbd>"</kbd> character  
 
 ```sh
+bash$ vboxmanage showvminfo "[tab]
+"Plan 9"        "Window-10"     "node-2"        
+"Ubuntu-20.10"  "node-1"        "node-3" 
+
+bash$ vboxmanage showvminfo "Ub[tab]
+
+bash$ vboxmanage showvminfo "Ubuntu-20.10"
+```
+
+```sh
 bash$ vboxmanage showvminfo [tab]
 1) node-1        3) node-3        5) Ubuntu-20.10  
 2) node-2        4) Plan 9        6) Window-10     
 
-bash$ vboxmanage showvminfo 3[tab]
+bash$ vboxmanage showvminfo 5[tab]
 
-bash$ vboxmanage showvminfo "node-3"
+bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
 You can see virtualbox command usage with
