@@ -30,7 +30,7 @@ open new terminal and try completion !
 
 ## Usage
 
-**vmname, snapname** completion start with <kbd>"</kbd> character  
+**vmname, snapname** completion can start with <kbd>"</kbd> character  
 
 ```sh
 bash$ vboxmanage showvminfo "[tab]
