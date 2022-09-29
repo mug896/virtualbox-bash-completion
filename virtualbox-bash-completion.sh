@@ -56,7 +56,7 @@ _vboxmanage_options()
 {
     local i
     if [[ $1 == value ]]; then
-        WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ; tR :R ' \
+        WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ;' \
                      -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]+]|\w[[:alnum:]|_-]*).*/\1/; tX; d' \
                      -e ':X s/[^[:alnum:]_-]/\n/g; s/^ *-.*//Mg' )
     else 
@@ -216,7 +216,7 @@ _vboxmanage_get_words()
     _vboxmanage_HELP2
     if [[ -z $SCMD && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
         WORDS=$( <<< $HELP2 sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
-            -e 's/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
+            -e 'tR :R s/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
     else  # else_words
         WORDS=$( <<< $HELP2 sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
             -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
