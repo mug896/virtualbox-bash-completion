@@ -71,7 +71,7 @@ cloud        hostonly     intnet       natnetwork   null
 ```
 
 You can see virtualbox command usage with
-> vboxmanage command   
-> vboxmanage help command (detail version)
+> vboxmanage command-name    
+> vboxmanage help command-name (detail version)
 
 
