@@ -43,7 +43,7 @@ bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
 ```sh
-bash$ vboxmanage showvminfo  wait ... 
+bash$ vboxmanage showvminfo [tab]
 1) "node-1"        3) "node-3"        5) "Ubuntu-20.10"  
 2) "node-2"        4) "Plan 9"        6) "Window-10"
 
