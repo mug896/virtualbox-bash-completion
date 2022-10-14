@@ -12,7 +12,7 @@ _vboxmanage_list()
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
-    if [ "$1" = "snapshot" ]; then
+    if [[ $1 == snapshot ]]; then
         _vboxmanage_index i $CMD2
         res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
     else
@@ -288,7 +288,7 @@ _vboxmanage()
     elif [[ $PREV == @(--ostype|--os-type) ]]; then
         WORDS=$( $CMD list ostypes | sed -En 's/^ID:\s+//p' )
 
-    elif [[ -z $CUR ]] && [[ $PREV == --vmname || $HELP =~ "$PREV <"[^\>]*"vmname"[^\>]*">" ]]; then
+    elif [[ -z $CUR ]] && [[ $HELP =~ "$PREV <"[^\>]*"vmname"[^\>]*">" ]]; then
         _vboxmanage_list vmname
 
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
