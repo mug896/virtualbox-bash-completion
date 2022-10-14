@@ -7,20 +7,20 @@ Operating System: Ubuntu 22.04.1 LTS
     Architecture: x86-64
 
 bash$ vboxmanage --version 
-6.1.36r152435
+7.0.0r153978
 
 bash$ vboxmanage [tab]
-vboxmanage 
-adoptstate        createmedium      guestproperty     movevm            storageattach
-bandwidthctl      createvm          hostonlyif        natnetwork        storagectl
-checkmediumpwd    debugvm           import            registervm        unattended
-clonemedium       dhcpserver        internalcommands  setextradata      unregistervm
-clonevm           discardstate      list              setproperty       usbdevsource
-closemedium       encryptmedium     mediumio          sharedfolder      usbfilter
-cloud             export            mediumproperty    showmediuminfo    
-cloudprofile      extpack           metrics           showvminfo        
-controlvm         getextradata      modifymedium      snapshot          
-convertfromraw    guestcontrol      modifyvm          startvm  
+adoptstate        createvm          help              modifyvm          startvm
+bandwidthctl      debugvm           hostonlyif        movevm            storageattach
+checkmediumpwd    dhcpserver        hostonlynet       natnetwork        storagectl
+clonemedium       discardstate      import            registervm        unattended
+clonevm           encryptmedium     internalcommands  setextradata      unregistervm
+closemedium       encryptvm         list              setproperty       updatecheck
+cloud             export            mediumio          sharedfolder      usbdevsource
+cloudprofile      extpack           mediumproperty    showmediuminfo    usbfilter
+controlvm         getextradata      metrics           showvminfo        
+convertfromraw    guestcontrol      modifymedium      signova           
+createmedium      guestproperty     modifynvram       snapshot
 ```
 
 ## Installation
@@ -43,9 +43,9 @@ bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
 ```sh
-bash$ vboxmanage showvminfo [tab]
-1) node-1        3) node-3        5) Ubuntu-20.10  
-2) node-2        4) Plan 9        6) Window-10     
+bash$ vboxmanage showvminfo  wait ... 
+1) "node-1"        3) "node-3"        5) "Ubuntu-20.10"  
+2) "node-2"        4) "Plan 9"        6) "Window-10"
 
 bash$ vboxmanage showvminfo 5[tab]
 
@@ -53,6 +53,7 @@ bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
 You can see virtualbox command usage with
-> vboxmanage command [enter]
+> vboxmanage command [enter]   
+> vboxmanage help command [enter]
 
 

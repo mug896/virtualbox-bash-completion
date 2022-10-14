@@ -1,27 +1,24 @@
 _vboxmanage_index()
 {
-    local -n i=$1
-    for ((i = 1; i < COMP_CWORD; )); do 
-        [[ ${COMP_WORDS[i++]} == $2 ]] && break
+    local -n index=$1
+    for ((index = 1; index < COMP_CWORD; )); do 
+        [[ ${COMP_WORDS[index++]} == $2 ]] && break
     done
 }
 _vboxmanage_list()
 {
-    local title=$1 medium=$2 res i
+    local res i
+
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
-    if [[ $title == snapshot-name ]]; then
-        _vboxmanage_index i snapshot
-        res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
-    elif [[ $title == filename ]]; then
-        case $medium in
-            dvds|floppies) res=$( $CMD list $medium | sed -En '/^Location: */{ s///p }' ) ;;
-            *) res=$( $CMD list hdds | sed -En '/^Type:\s+normal\s+\(base\)/{ n; s/Location: *//p }') ;;
-        esac
-    else  # vmname
-        res=$( $CMD list vms | sed -E 's/.*"([^"]*)".*/\1/' )
+    if [ "$1" = "snapshot" ]; then
+        _vboxmanage_index i $CMD2
+        res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
+    else
+        res=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
+
     WORDS=$( <<< $res gawk '/[[:graph:]]/{ a[i++] = $0 } END { 
             if (isarray(a)) { 
                 len = length(i)
@@ -29,305 +26,284 @@ _vboxmanage_list()
                     printf "%0*d) %s\n", len, i+1, a[i]
                 if (length(a) == 1) print " "
             }}')
+
     _vboxmanage_list=$WORDS
     IFS=$'\n' COMPREPLY=( $WORDS )
 }
 
-_vboxmanage_number()
-{
-    CUR=$(( 10#$CUR ))
-    COMPREPLY=$( <<< $_vboxmanage_list \
-        gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print "\""$0"\""; exit}' )
-}
-
-_vboxmanage_double_quotes()
+_vboxmanage_quote()
 {
     local i
-    if [[ $PREV == --snapshot ]] || 
-       [[ $HELP =~ ${PREV}[$' \n']*\ +"<snapshot-name" ]]; then
+    if [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
         _vboxmanage_index i snapshot
         WORDS=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else
         WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\1/' )
     fi
-    IFS=$'\n' COMPREPLY=( $(compgen -P \" -S \" -W "$WORDS" -- "$CUR") )
+    IFS=$'\n'
+    COMPREPLY=($(compgen -P \" -S \" -W "$WORDS" -- "$CUR"))
 }
-_vboxmanage_options() 
+
+_vboxmanage_option() 
 {
-    local i
-    if [[ $1 == value ]]; then
-        WORDS=$( sed -E -e ':Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ;' \
-                     -e 's/.*'"${PREV%%+([0-9])}"'[0-9]*[= ]([^][]+]|\w[[:alnum:]|_-]*).*/\1/; tX; d' \
-                     -e ':X s/[^[:alnum:]_-]/\n/g; s/^ *-.*//Mg' )
-    else 
-        local GREP="grep -Po -- '(?<![a-z])-[[:alnum:]-]+=?'"
-        if [[ -z $CMD2 ]]; then
-            WORDS=$( sed -En '/General Options:/,/Commands:/p' | eval "$GREP" )
-        elif [[ $CMD2 == internalcommands && $PREV != internalcommands ]]; then
-            _vboxmanage_index i internalcommands
-            WORDS=$( sed -En '/^ *'"${COMP_WORDS[i]}"'/,/^$/{ s/\b[0-9]+-([0-9]+|N)//ig; p}' | eval "$GREP" )
-        elif [[ $CMD2 == mediumio ]]; then
-            if [[ -z $SCMD ]]; then
-                WORDS="--disk= --dvd= --floppy= --password-file="
-            else
-                case $SCMD in
-                    formatfat) WORDS=" --quick" ;;
-                    cat) WORDS=" --hex --offset= --size= --output=" ;;
-                    stream) WORDS=" --format= --variant= --output=" ;;
-                esac
-            fi
-        else
-            WORDS=$( sed -En 's/\b[0-9]+-([0-9]+|N)//ig; p' | eval "$GREP" )
-        fi
-    fi
-}
-_vboxmanage_get_options_cloud()
-{
-    if [[ $1 == profile ]]; then
-        if [[ -n $SCMD ]]; then
-            HELP=$( <<< $HELP sed -En '/VBoxManage cloudprofile .*'"$SCMD"'.*/,/^$/p' |
-                    sed -E 's/--provider=|--profile=//g' )
-        else
-            HELP=" --provider= --profile="
-        fi
-    else
-        if [[ -n $SCMD && -n $SCMD2 ]]; then
-            HELP=$( <<< $HELP sed -En '/VBoxManage cloud .*'"$SCMD $SCMD2"'.*/,/^$/p' |
-                    sed -E 's/--provider=|--profile=//g' )
-        else
-            HELP=" --provider= --profile="
-        fi
-    fi
-}
-_vboxmanage_get_options_sub()
-{
-    if [[ $CMD2 == guestcontrol ]]; then
-        if [[ -n $SCMD ]]; then
-            HELP=$( <<< $HELP sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
-                -e '/^[ ]*[[:alnum:]\|]*\b'$SCMD'\b/,/^$/p' )
+    local arg=$1
+
+    if [[ $CMD2 == @(snapshot|encryptvm|controlvm|debugvm|modifynvram|bandwidthctl|\
+guestcontrol) ]]; then
+        if [[ -n $CMD3 ]]; then
+            HELP=$( <<< $HELP sed -En "/$CMD $CMD2 [^ ]+ $CMD3/p" )
         else
             HELP=""
         fi
-        local set="list closeprocess closesession updatega updateguestadditions updateadditions watch"
-        if [[ $SCMD == @(${set//+([$' \n'])/|}) ]]; then
-            HELP+=" -v --verbose -q --quiet"
+
+    elif [[ $CMD2 == @(mediumio|cloudprofile) ]]; then
+        if [[ -z $CMD3 ]]; then
+            HELP=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' (.*) \w{3,}( .*|$)/\1/p' )
         else
-            HELP+=" -v --verbose -q --quiet --username --domain --password --passwordfile"
-        fi
-    elif [[ -n $SCMD ]]; then
-        HELP=$( <<< $HELP sed -En '/VBoxManage '$CMD2'.*[ |]'$SCMD'\b.*/,/^$/p' )
-    fi
-}
-_vboxmanage_subcommand()
-{
-    local i=$(( idx2 + 1 ))
-    local set="dhcpserver extpack guestproperty hostonlyif metrics natnetwork unattended
-            usbdevsource setproperty usbfilter sharedfolder"
-
-    if [[ $CMD2 == @(debugvm|snapshot|controlvm|bandwidthctl) ]]; then
-        if (( i + 1 < COMP_CWORD )); then 
-            [[ $CMD2 == controlvm ]] && SCMD=${COMP_WORDS[i+1]%%+([0-9])} || SCMD=${COMP_WORDS[i+1]}
+            HELP=$( <<< $HELP sed -En 's/.* '"$CMD3"' (.*)/\1/p' )
         fi
 
-    elif [[ $CMD2 == @(${set//+([$' \n'])/|}) ]]; then
-        (( i < COMP_CWORD )) && SCMD=${COMP_WORDS[i]}
-
-    elif [[ $CMD2 == guestcontrol ]]; then let i++
-        while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
-            [[ ${COMP_WORDS[i]} == @(-v|--verbose|-q|--quiet) ]] && let i++ || {
-                [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i+=2
-            }
-        done
-        (( i < COMP_CWORD )) && SCMD=${COMP_WORDS[i]}
-
-    elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then idc=2
-        while [[ $idc -lt $COMP_CWORD && ${COMP_WORDS[idc]} == -* ]]; do 
-            [[ ${COMP_WORDS[idc]} == @(--provider|--profile) ]] && {
-                [[ ${COMP_WORDS[idc+1]} == "=" ]] && let idc+=3 || let idc+=2
-            }
-        done
-        (( idc < COMP_CWORD )) && SCMD=${COMP_WORDS[idc]}
-        [[ $CMD2 == cloud ]] && (( idc + 1 < COMP_CWORD )) && SCMD2=${COMP_WORDS[idc + 1]}
-
-    elif [[ $CMD2 == @(list|mediumio) ]]; then
-        while [[ $i -lt $COMP_CWORD && ${COMP_WORDS[i]} == -* ]]; do 
-            [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=3 || let i++
-        done
-        (( i < COMP_CWORD )) && SCMD=${COMP_WORDS[i]}
-
-    elif [[ $CMD2 == mediumproperty ]]; then
-        [[ ${COMP_WORDS[i]} == @(disk|dvd|floppy) ]] && let i++
-        (( i < COMP_CWORD )) && SCMD=${COMP_WORDS[i]}
-
-    elif [[ $CMD2 == convertfromraw ]]; then
-        [[ ${COMP_WORDS[i]} == stdin ]] && SCMD=${COMP_WORDS[i]}
-    fi
-}
-_vboxmanage_HELP2()
-{
-    HELP2=$( <<< $HELP perl -pe 's/(VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?)/" " x length($1)/e' )
-    n=$( <<< $HELP awk 'BEGIN{ min=100 }
-        match($0, /^ *[^ ]/) { if (RLENGTH > 10 && RLENGTH < min) min = RLENGTH } 
-        END { print --min }' )
-}
-_vboxmanage_get_options() 
-{
-    local arg=$1
-    local set="debugvm dhcpserver extpack guestcontrol guestproperty hostonlyif
-        metrics natnetwork snapshot unattended usbdevsource usbfilter sharedfolder"
-
-    if [[ $CMD2 == @(${set//+([$' \n'])/|}) ]]; then
-        _vboxmanage_get_options_sub
+    elif [[ $CMD2 == @(sharedfolder|dhcpserver|extpack|unattended|hostonlynet|\
+updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) ]]; then
+        if [[ -n $CMD3 ]]; then
+            HELP=$( <<< $HELP sed -En "/$CMD $CMD2 $CMD3/p" )
+        else
+            HELP=""
+        fi
 
     elif [[ $CMD2 == cloud ]]; then
-        _vboxmanage_get_options_cloud
+        if [[ -z $CMD3 ]]; then
+            HELP=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' (.*) \w{3,} \w{3,}( .*|$)/\1/p' )
+        elif [[ -n $CMD3 && -n $CMD4 ]]; then
+            HELP=$( <<< $HELP sed -En "s/$CMD $CMD2.* $CMD3 $CMD4(.*)/\1/p" )
+        else
+            HELP=""
+        fi
 
-    elif [[ $CMD2 == cloudprofile ]]; then
-        _vboxmanage_get_options_cloud profile
-
-    else
-        local HELP2 n
-        _vboxmanage_HELP2
-        if [[ -n $SCMD && $CMD2 == @(controlvm|bandwidthctl) ]]; then
-            HELP=$( <<< $HELP2 sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
-                -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
-                -e '/^[ ]{'$n'}\w/Q; bX }' )
+    elif [[ $CMD2 == internalcommands ]]; then
+        if [[ -n $CMD3 ]]; then
+            HELP=$( <<< $HELP sed -En '/^ *'"$CMD3"' /,/^$/H; ${g; s/\n/ /g; p}' )
+        else
+            HELP=""
         fi
     fi
 
     if [[ $arg == value ]]; then
-        _vboxmanage_options value <<< $(set -f; echo $HELP)
+        if [[ $CMD2 == clonevm && $PREV == --mode ]]; then
+            WORDS="machine machinechildren all"
+        elif [[ $CMD2 == modifyvm && $PREV == --cpu-profile ]]; then
+            IFS=$'\n'
+            COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR"))
+        else
+            local opt=${PREV/%[0-9]/N}
+            WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].]+-?)*[[:alnum:].]+)\]?[,|/])+\[?(([[:alnum:].]+-?)*[[:alnum:].]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].-]/ /g; p' )
+        fi
     else
-        _vboxmanage_options <<< $HELP
+        WORDS=$( <<< $HELP grep -Po -- '(?<![[:alnum:]])-[[:alnum:]-]+' )
     fi
-    COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
-    COMPREPLY=( ${COMPREPLY[@]/%--/} )
 }
+
 _vboxmanage_words()
 {
-    sed -E -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
-           -e ':X s/\[[^][]*\]//g; tX; :Y s/<[^><]*>//g; tY; :Z s/\([^)(]*\)//g; tZ' \
-           -e 's/'"VBoxManage $CMD2"'//g; s/[^[:alnum:]=-]/ /g' \
-    | gawk '{ for (i=1; i<=NF; i++) { if ($i ~ /^[[:alpha:]][[:alnum:]-]+=?$/) print $i }}'
-}
-_vboxmanage_get_words()
-{
-    local HELP2 n
-    _vboxmanage_HELP2
-    if [[ -z $SCMD && $CMD2 == @($PREV|$PREV2|${COMP_WORDS[COMP_CWORD-3]}) ]]; then
-        WORDS=$( <<< $HELP2 sed -En -e 's/([[:alnum:]]+)\[([[:alnum:]]+)]/\1\2/g;' \
-            -e 'tR :R s/^[ ]{'$n'}\[?(\w[[:alnum:]\|-]+)\]?.*/\1/; tX; b' -e ':X s/\|/ /g; p' )
-    else  # else_words
-        WORDS=$( <<< $HELP2 sed -En -e '/^[ ]{'$n'}'$SCMD'\b/{ ' \
-            -e ':Y s/'$SCMD'\b//; :X p; n; /^[ ]{'$n'}'$SCMD'\b/bY;' \
-            -e '/^[ ]{'$n'}\w/Q; bX }' | ( set -f; echo $(cat) ) | _vboxmanage_words )
-    fi
-}
-_vboxmanage_else_words()
-{
-    local noneed="storagectl storageattach startvm showvminfo registervm movevm 
-        modifyvm import export encryptmedium discardstate createvm clonevm 
-        checkmediumpwd adoptstate"
-    [[ $CMD2 == @(${noneed//+([$' \n'])/|}) ]] && return
+    local RE='[[:alnum:]][[:alnum:]-]'
 
-    local ifscmdset="usbfilter usbdevsource unattended snapshot sharedfolder natnetwork 
-        metrics mediumio list hostonlyif guestproperty guestcontrol extpack dhcpserver
-        debugvm convertfromraw cloudprofile bandwidthctl mediumproperty"
-    [[ -n $SCMD && $CMD2 == @(${ifscmdset//+([$' \n'])/|}) ]] && return
+    if [[ $CMD2 == list ]]; then
+        WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'|--\w+//g; s/\[|]|\|/ /g; p' )
 
-    [[ $CMD2 == cloud && -n $SCMD && -n $SCMD2 ]] && return
-
-    [[ $CMD2 == @(showmediuminfo|modifymedium|createmedium|closemedium|clonemedium) &&
-        ${COMP_WORDS[idx2 + 1]} == @(disk|dvd|floppy) ]] && return
-
-    local set1="bandwidthctl clonemedium closemedium controlvm convertfromraw
-        createmedium guestcontrol hostonlyif metrics setproperty modifymedium"
-
-    local set2="dhcpserver extpack getextradata debugvm guestproperty natnetwork
-        setextradata snapshot unattended usbdevsource usbfilter"
-
-    if [[ $CMD2 == @(${set1//+([$' \n'])/|}) ]]; then
-        _vboxmanage_get_words
-
-    elif [[ $CMD2 == @(${set2//+([$' \n'])/|}) ]]; then
-        WORDS=$( <<< $HELP \
-            sed -En -e 's/VBoxManage '$CMD2'(\s+<[^>]*vmname[^>]*>)?\s+([[:alnum:]\|-]+).*/\2/; tX; b' \
-                    -e ':X s/\|/ /g; p' )
-
-    else # list mediumio mediumproperty sharedfolder
-        WORDS=$( set -f; echo $HELP | _vboxmanage_words )
-        if [[ $CMD2 == showmediuminfo ]]; then  WORDS=" disk dvd floppy"
-        elif [[ $CMD2 == mediumproperty ]]; then 
-            [[ ${COMP_WORDS[idx2 + 1]} != @(disk|dvd|floppy) ]] && WORDS=" disk dvd floppy"
+    elif [[ $CMD2 == setproperty ]]; then
+        if [[ -z $CMD3 ]]; then
+            WORDS=$( vboxmanage help setproperty | sed -En '/^Description$/,/^Examples$/{ //d; /^[ ]{,3}\w+$/p }' )
+        elif [[ $CMD3 == proxymode ]]; then
+            WORDS="manual noproxy system"
+        elif [[ $CMD3 == hwvirtexclusive ]]; then
+            WORDS="on off"
         fi
+
+    elif [[ $CMD2 == @(snapshot|encryptvm|controlvm|debugvm|modifynvram|\
+bandwidthctl|guestcontrol) ]]; then
+        if [[ -z $CMD3 ]]; then
+            WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' [^ ]+ ('"$RE"*')( .*|$)/\1/p' )
+        elif [[ $CMD2 == guestcontrol && $PREV == list ]]; then
+            WORDS="all files processes sessions"
+        elif [[ $CMD2 == controlvm ]]; then
+            case $CMD3 in
+                setlinkstate[0-9]|nictrace[0-9]|audioin|audioout|vrde|autostart-enabled[0-9])
+                    WORDS="on off" ;;
+                nic[0-9])
+                    WORDS="null nat bridged intnet hostonly generic natnetwork" ;;
+                nicpromisc[0-9])
+                    WORDS="deny allow-vms allow-all" ;;
+                natpf[0-9]) 
+                    WORDS="rulename tcp udp host-IP hostport guest-IP guestport" ;;
+                clipboard) 
+                    if [[ $PREV == clipboard ]]; then
+                        WORDS="mode filetransfers"
+                    elif [[ $PREV == mode ]]; then
+                        WORDS="disabled hosttoguest guesttohost bidirectional"
+                    elif [[ $PREV == filetransfers ]]; then
+                        WORDS="on off"
+                    fi ;;
+                draganddrop) 
+                    WORDS="disabled hosttoguest guesttohost bidirectional" ;;
+                recording)
+                    WORDS="on off screens filename videores videorate videofps maxtime maxfilesize" ;;
+                webcam)
+                    WORDS="attach detach list" ;;
+                vm-process-priority)
+                    WORDS="default flat low normal high" ;;
+                changeuartmode[0-9])
+                    WORDS="disconnected serverpipe-name clientpipe-name tcpserverport tcpclienthostname:port filefilename device-name"
+            esac
+        fi
+
+    elif [[ -z $CMD3 && $CMD2 == @(mediumio|cloudprofile) ]]; then
+        WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' .* ('"$RE"'{2,})( .*|$)/\1/p' )
+
+    elif [[ $CMD2 == @(sharedfolder|dhcpserver|extpack|unattended|\
+hostonlynet|updatecheck|convertfromraw|usbfilter|guestproperty|metrics|natnetwork|\
+hostonlyif|usbdevsource) ]]; then
+        if [[ -z $CMD3 ]]; then
+            WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' ('"$RE"'*)( .*|$)/\1/p' )
+        elif [[ $CMD2 == metrics ]]; then
+            WORDS="'*' host vmname metrics-list"
+        fi
+    elif [[ $CMD2 == cloud ]]; then
+        if [[ -z $CMD3 ]]; then
+            WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'.* ('"$RE"'{2,}) '"$RE"'{2,}( .*|$)/\1/p' )
+        elif [[ -z $CMD4 ]]; then
+            WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'.* '"$CMD3"' ('"$RE"'{2,})( .*|$)/\1/p' )
+        fi
+    elif [[ $CMD2 == @(showmediuminfo|createmedium|modifymedium|mediumproperty) ]]; then
+        if [[ $PREV == $CMD2 ]]; then
+            WORDS="disk dvd floppy"
+        elif [[ -z $CMD3 && $CMD2 == mediumproperty ]]; then
+            WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' [^ ]+ ('"$RE"'*)( .*|$)/\1/p' )
+        fi
+    elif [[ $CMD2 == clonemedium ]]; then
+        [[ -n $CMD3 && -n $CMD4 && $PREV == $CMD4 ]] && WORDS="disk dvd floppy"
+    elif [[ $CMD2 == getextradata ]]; then
+        WORDS="keyword enumerate"
     fi
-    COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
+}
+
+_vboxmanage_set_cmds()
+{
+    local i
+    for (( i = 1; i < COMP_CWORD; i++)); do
+        [[ ${COMP_WORDS[i]} == @(-q|--nologo) ]] && continue
+        [[ ${COMP_WORDS[i]} == "@" ]] && { let i++; continue ;}
+        if [[ ${COMP_WORDS[i]} == @(--settingspw|--settingspwfile) ]]; then 
+            [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=2 || let i++
+            continue 
+        fi
+        break
+    done
+    (( i < COMP_CWORD )) && CMD2=${COMP_WORDS[i]}
+    [[ ! $CMD2 ]] && return
+    case $CMD2 in
+        sharedfolder|dhcpserver|extpack|unattended|hostonlynet|updatecheck|usbfilter|\
+        setproperty|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource|\
+        convertfromraw|clonemedium|internalcommands)
+            (( i + 1 < COMP_CWORD )) && CMD3=${COMP_WORDS[i+1]}
+            if [[ $CMD2 == clonemedium ]] && (( i + 2 < COMP_CWORD )); then
+                CMD4=${COMP_WORDS[i+2]}
+            fi
+            ;;
+        snapshot|encryptvm|controlvm|debugvm|modifynvram|bandwidthctl|guestcontrol|\
+        mediumproperty)
+            (( i + 2 < COMP_CWORD )) && CMD3=${COMP_WORDS[i+2]}
+            ;;
+        mediumio|cloud|cloudprofile)
+            for (( ++i ; i < COMP_CWORD; i++)); do
+                if [[ ${COMP_WORDS[i]} == --* ]]; then 
+                    [[ ${COMP_WORDS[i+1]} == "=" ]] && let i+=2 || let i++
+                    continue 
+                fi
+                break
+            done
+            (( i < COMP_CWORD )) && CMD3=${COMP_WORDS[i]}
+            if [[ $CMD2 == cloud ]] && (( i + 1 < COMP_CWORD )); then
+                CMD4=${COMP_WORDS[i+1]}
+            fi
+    esac
+}
+_init_comp_wordbreaks()
+{
+    if [[ $PROMPT_COMMAND == *";COMP_WORDBREAKS="* ]]; then
+        [[ $PROMPT_COMMAND =~ ^:\ ([^;]+)\; ]]
+        [[ ${BASH_REMATCH[1]} != "${COMP_WORDS[0]}" ]] && eval "${PROMPT_COMMAND%%$'\n'*}"
+    fi
+    if [[ $PROMPT_COMMAND != *";COMP_WORDBREAKS="* ]]; then
+        PROMPT_COMMAND=": ${COMP_WORDS[0]};COMP_WORDBREAKS=${COMP_WORDBREAKS@Q};\
+        "$'PROMPT_COMMAND=${PROMPT_COMMAND#*$\'\\n\'}\n'$PROMPT_COMMAND
+    fi
 }
 _vboxmanage() 
 {
-    local CMD=$1 CMD2 SCMD SCMD2
+    # It is recommended that every completion function starts with _init_comp_wordbreaks,
+    # whether or not they change the COMP_WORDBREAKS variable afterward.
+    _init_comp_wordbreaks
+    [[ $COMP_WORDBREAKS != *@* ]] && COMP_WORDBREAKS+="@"
+
+    local CMD=VBoxManage CMD2 CMD3 CMD4
     local CUR=${COMP_WORDS[COMP_CWORD]}
     [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *$CUR* ]] && CUR=""
-    local PREV=${COMP_WORDS[COMP_CWORD-1]} PREV2=${COMP_WORDS[COMP_CWORD-2]}
+    local PREV=${COMP_WORDS[COMP_CWORD-1]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
-    local IFS=$' \t\n' WORDS idx2=1 idc
-    while [[ $idx2 -lt $COMP_CWORD && ${COMP_WORDS[idx2]} == -* ]]; do 
-        [[ ${COMP_WORDS[idx2]} == @(-q|--nologo|@*) ]] && let idx2++ || {
-            [[ ${COMP_WORDS[idx2 + 1]} == "=" ]] && let idx2+=3 || let idx2+=2
-        }
-    done
-    (( idx2 < COMP_CWORD )) && CMD2=${COMP_WORDS[idx2]}
-    [[ -n $CMD2 ]] && _vboxmanage_subcommand
-    local HELP=$($CMD $CMD2 |& tail -n +3 | sed 's/\[  \+\(USB|NVMe|VirtIO]\)/\1/')
-
-    if [[ $PREV == --settingspwfile ]]; then
-        :
-    elif [[ $CUR == +([0-9]) && -n $_vboxmanage_list ]]; then
-        _vboxmanage_number
-
-    elif [[ $CMD2 == internalcommands && $PREV == internalcommands ]]; then
-        WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
-        COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
-
-    elif [[ $CUR == -* ]]; then
-        _vboxmanage_get_options
-    
-    elif [[ $PREV == --ostype ]]; then
-        WORDS=$( $CMD list ostypes | sed -En 's/^ID:\s+//p' )
-        COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
-    
-    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
-        _vboxmanage_double_quotes
-
-    elif [[ -z $CMD2 ]]; then
-        WORDS=$( <<< $HELP tee >(gawk '/^[ ]{2}[a-z]+/{print $1}') \
-            >(\grep -Po '(?<=VBoxManage )\w+') > /dev/null )" internalcommands"
-        COMPREPLY=( $(compgen -W "$WORDS" -- $CUR) )
-
-    elif [[ -z $CUR ]] && 
-        [[ $HELP =~ ${PREV}[^$' \n']*\ +"<"[^\>]*"vmname"[^\>]*">" ]]; then
-        _vboxmanage_list vmname
-
-    elif [[ -z $CUR ]] && [[ $PREV == --snapshot || 
-         $HELP =~ ${PREV}[^$' \n']*\ +"<snapshot-name" ]]; then
-        _vboxmanage_list snapshot-name
-
-    elif [[ -z $CUR ]] && [[ $PREV == @(--disk|--dvd|--floppy) || 
-         $HELP =~ ${PREV}[^$' \n']*\ +"<uuid|filename>" ]]; then
-         if [[ $PREV == @(dvd|--dvd) || $PREV2 == dvd ]]; then PREV=dvds
-         elif [[ $PREV == @(floppy|--floppy) || $PREV2 == floppy ]]; then PREV=floppies
-         else PREV=hdds; fi
-        _vboxmanage_list filename $PREV
-    
-    elif [[ $PREV == -* && $CMD2 != list && ! ($CMD2 == guestcontrol && -z $SCMD) ]]; then
-        _vboxmanage_get_options value
-
-    else
-        [[ $CMD2 != internalcommands ]] && _vboxmanage_else_words
+    local IFS=$' \t\n' WORDS HELP
+    _vboxmanage_set_cmds
+    if [[ -n $CMD2 ]]; then
+        if [[ $CMD2 == internalcommands ]]; then
+            HELP=$( $CMD internalcommands )
+        else
+            HELP=$( $CMD $CMD2 | sed -Ez 's/ *\n {5,}/ /g; s/^([^\n]*\n){1}\n//; s/\n\n+/\n/g; s/ \| /\|/g; s/= /=/g' )
+        fi
     fi
 
+    if [[ $CUR == -* ]]; then
+        if [[ -z $CMD2 ]]; then
+            WORDS="-V --version --dump-build-type -q --nologo --settingspw= --settingspwfile="
+        else
+            _vboxmanage_option
+        fi
+
+    elif [[ $CUR == +([0-9]) && -n $_vboxmanage_list ]]; then
+        CUR=$(( 10#$CUR ))
+        COMPREPLY=$(<<< $_vboxmanage_list gawk $CUR' == $1+0 {sub(/^[0-9]+) +/,""); print $0; exit}')
+        
+    elif [[ ${COMP_WORDS[COMP_CWORD]} == "@" || $PREV == "@" ]]; then
+        :
+
+    elif [[ $PREV != @(--settingspw|--settingspwfile) && ( -z $CMD2 || $CMD2 == help ) ]]; then
+        WORDS=$( $CMD | sed -En 's/^\s*VBoxManage (\w+).*/\1/p' )
+        WORDS+=" internalcommands help"
+
+    elif [[ $CMD2 = internalcommands && -z $CMD3 ]]; then
+        WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
+
+    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
+        _vboxmanage_quote
+
+    elif [[ $PREV == @(--ostype|--os-type) ]]; then
+        WORDS=$( $CMD list ostypes | sed -En 's/^ID:\s+//p' )
+
+    elif [[ -z $CUR ]] && [[ $PREV == --vmname || $HELP =~ "$PREV <"[^\>]*"vmname"[^\>]*">" ]]; then
+        _vboxmanage_list vmname
+
+    elif [[ -z $CUR ]] && [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
+        _vboxmanage_list snapshot
+    
+    elif [[ $PREV == --interface || $HELP =~ "$PREV <ifname>" ]]; then
+        WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) 
+
+    elif [[ $PREV == -* ]]; then
+        _vboxmanage_option value
+
+    else
+        [[ $CMD2 != internalcommands ]] && _vboxmanage_words
+    fi
+
+    [[ -z $COMPREPLY ]] && COMPREPLY=( $(compgen -W '$WORDS' -- $CUR) )
     [[ ${COMPREPLY: -1} == "=" ]] && compopt -o nospace
 }
-
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
-
