@@ -153,7 +153,7 @@ bandwidthctl|guestcontrol) ]]; then
                     WORDS="default flat low normal high" ;;
                 changeuartmode[0-9])
                     WORDS="disconnected serverpipe-name clientpipe-name
-                    tcpserverport tcpclienthostname:port filefilename device-name"
+                    tcpserverport tcpclienthostname:port filefilename device-name" ;;
             esac
         fi
 
