@@ -297,7 +297,7 @@ _vboxmanage()
     elif [[ $PREV == --interface || $HELP =~ "$PREV <ifname>" ]]; then
         WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) 
 
-    elif [[ $PREV == -* ]]; then
+    elif [[ $PREV == -* && $CMD2 != metrics ]]; then
         _vboxmanage_option value
 
     else
