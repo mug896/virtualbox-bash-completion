@@ -65,7 +65,6 @@ bash$ vboxmanage modifyvm "node-1" --nic[tab]
 --nic-bandwidth-groupN  --nic-propertyN         --nic-typeN
 --nic-boot-prioN        --nic-speedN            --nicN
 . . .
-
 bash$ vboxmanage modifyvm "node-1" --nic2 [tab]             # --nic2=[tab] also works.
 bridged      generic      hostonlynet  nat          none         
 cloud        hostonly     intnet       natnetwork   null
