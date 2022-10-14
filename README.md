@@ -53,7 +53,7 @@ bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
 You can see virtualbox command usage with
-> vboxmanage command [enter]   
-> vboxmanage help command [enter]
+> vboxmanage command   
+> vboxmanage help command (detail version)
 
 
