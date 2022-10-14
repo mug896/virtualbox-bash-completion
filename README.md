@@ -52,6 +52,25 @@ bash$ vboxmanage showvminfo 5[tab]
 bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
+Name that ends with capital `N` should replace with [0-9] number for completion works.
+
+```sh
+bash$ vboxmanage controlvm "node-1" nic[tab]
+nicN           nicpromiscN    nicpropertyN   nictraceN      nictracefileN  
+
+bash$ vboxmanage controlvm "node-1" nic2 [tab] 
+bridged     generic     hostonly    intnet      nat         natnetwork  null
+
+bash$ vboxmanage modifyvm "node-1" --nic[tab]
+--nic-bandwidth-groupN  --nic-propertyN         --nic-typeN
+--nic-boot-prioN        --nic-speedN            --nicN
+. . .
+
+bash$ vboxmanage modifyvm "node-1" --nic2 [tab]             # --nic2=[tab] also works.
+bridged      generic      hostonlynet  nat          none         
+cloud        hostonly     intnet       natnetwork   null
+```
+
 You can see virtualbox command usage with
 > vboxmanage command   
 > vboxmanage help command (detail version)
