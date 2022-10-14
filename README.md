@@ -52,7 +52,7 @@ bash$ vboxmanage showvminfo 5[tab]
 bash$ vboxmanage showvminfo "Ubuntu-20.10"
 ```
 
-Name that ends with capital `N` should replace with [0-9] number for completion works.
+Names that end with capital `N` should replace with `[0-9]` number for completion works.
 
 ```sh
 bash$ vboxmanage controlvm "node-1" nic[tab]
