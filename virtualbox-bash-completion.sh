@@ -132,8 +132,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         esac
     elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
         _vboxmanage_index i storageattach
-        WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | 
-            sed -En 's/storagecontrollername[0-9]=//p' )
+        WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
         IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
     fi
     
