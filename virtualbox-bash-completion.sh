@@ -211,7 +211,8 @@ hostonlyif|usbdevsource) ]]; then
         elif [[ -z $CMD4 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'.* '"$CMD3"' ('"$RE"'{2,})( .*|$)/\1/p' )
         fi
-    elif [[ $CMD2 == @(showmediuminfo|createmedium|modifymedium|mediumproperty) ]]; then
+    elif [[ $CMD2 == @(showmediuminfo|createmedium|modifymedium|mediumproperty|\
+closemedium) ]]; then
         if [[ $PREV == $CMD2 ]]; then
             WORDS="disk dvd floppy"
         elif [[ -z $CMD3 && $CMD2 == mediumproperty ]]; then
