@@ -46,7 +46,7 @@ _vboxmanage_quote()
 
 _vboxmanage_option() 
 {
-    local arg=$1
+    local arg=$1 i
 
     if [[ $CMD2 == @(snapshot|encryptvm|controlvm|debugvm|modifynvram|bandwidthctl|\
 guestcontrol) ]]; then
@@ -132,6 +132,11 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --network)
                 WORDS=$( $CMD list dhcpservers | sed -En 's/^NetworkName:\s+//p' ) ;;
         esac
+    elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
+        _vboxmanage_index i storageattach
+        WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | 
+            sed -En 's/storagecontrollername[0-9]=//p' )
+        COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
     fi
     
     if [[ -z $WORDS ]]; then
@@ -326,7 +331,7 @@ _vboxmanage()
     elif [[ $CMD2 = internalcommands && -z $CMD3 ]]; then
         WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
 
-    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* ]]; then
+    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* && $PREV != --storagectl ]]; then
         _vboxmanage_quote
 
     elif [[ $PREV == @(--ostype|--os-type) ]]; then
