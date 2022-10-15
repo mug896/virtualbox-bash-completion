@@ -71,7 +71,7 @@ bridged      generic      hostonlynet  nat          none
 cloud        hostonly     intnet       natnetwork   null
 ```
 
-You can see virtualbox command usage with
+You can see virtualbox subcommand usage with
 > vboxmanage command-name    
 > vboxmanage help command-name (detail version)
 

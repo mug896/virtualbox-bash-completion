@@ -111,7 +111,8 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             local opt=${PREV/%[0-9]/N}
             WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
         fi
-    else
+
+    else   # $arg != value
         WORDS=$( <<< $HELP grep -Po -- '(?<![[:alnum:]])-[[:alnum:]-]+' )
     fi
 }
