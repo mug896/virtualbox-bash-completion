@@ -123,6 +123,13 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --profile)
                 WORDS=$( $CMD list cloudprofiles | sed -En 's/^Name:\s+//p' ) ;; 
         esac
+        if [[ $CMD2 == cloud && $CMD3 == list && $PREV == --state ]]; then
+            case $CMD4 in
+                instances) WORDS="running paused terminated" ;;
+                images) WORDS="available disabled deleted" ;;
+            esac
+        fi
+
     elif [[ $CMD2 == dhcpserver ]]; then
         case $PREV in
             --interface)
@@ -130,6 +137,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --network)
                 WORDS=$( $CMD list dhcpservers | sed -En 's/^NetworkName:\s+//p' ) ;;
         esac
+
     elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
         _vboxmanage_index i storageattach
         WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
