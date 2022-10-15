@@ -205,12 +205,14 @@ hostonlyif|usbdevsource) ]]; then
         elif [[ $CMD2 == hostonlyif && $PREV == @(ipconfig|remove) ]]; then
             WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' )
         fi
+
     elif [[ $CMD2 == cloud ]]; then
         if [[ -z $CMD3 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'.* ('"$RE"'{2,}) '"$RE"'{2,}( .*|$)/\1/p' )
         elif [[ -z $CMD4 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'.* '"$CMD3"' ('"$RE"'{2,})( .*|$)/\1/p' )
         fi
+
     elif [[ $CMD2 == @(showmediuminfo|createmedium|modifymedium|mediumproperty|\
 closemedium) ]]; then
         if [[ $PREV == $CMD2 ]]; then
@@ -218,8 +220,10 @@ closemedium) ]]; then
         elif [[ -z $CMD3 && $CMD2 == mediumproperty ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' [^ ]+ ('"$RE"'*)( .*|$)/\1/p' )
         fi
+
     elif [[ $CMD2 == clonemedium ]]; then
         [[ -n $CMD3 && -n $CMD4 && $PREV == $CMD4 ]] && WORDS="disk dvd floppy"
+
     elif [[ $CMD2 == getextradata ]]; then
         WORDS="keyword enumerate"
     fi
