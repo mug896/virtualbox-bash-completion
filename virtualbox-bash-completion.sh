@@ -91,9 +91,22 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     if [[ $arg == value ]]; then
         if [[ $CMD2 == clonevm && $PREV == --mode ]]; then
             WORDS="machine machinechildren all"
-        elif [[ $CMD2 == modifyvm && $PREV == --cpu-profile ]]; then
-            IFS=$'\n'
-            COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR"))
+        elif [[ $CMD2 == modifyvm ]]; then
+            case $PREV in
+                --bridge-adapter[0-9])
+                    WORDS=$( vboxmanage list bridgedifs | sed -En 's/^Name:\s+//p' ) ;;
+                --host-only-adapter[0-9])
+                    WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
+                --intnet[0-9])
+                    WORDS=$( vboxmanage list intnets | sed -En 's/^Name:\s+//p' ) ;;
+                --nat-network[0-9])
+                    WORDS=$( vboxmanage list natnets | sed -En 's/^Name:\s+//p' ) ;;
+                --host-only-net[0-9])
+                    WORDS=$( vboxmanage list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
+                --cpu-profile)
+                    IFS=$'\n'
+                    COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
+            esac
         else
             local opt=${PREV/%[0-9]/N}
             WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
