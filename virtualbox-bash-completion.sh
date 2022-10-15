@@ -93,8 +93,13 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         return
     fi
 
-    if [[ $CMD2 == clonevm && $PREV == --mode ]]; then
-        WORDS="machine machinechildren all"
+    if [[ $CMD2 == clonevm ]]; then
+        case $PREV in
+            --mode)
+                WORDS="machine machinechildren all" ;;
+            --groups)
+                WORDS=$( $CMD list groups ) ;;
+        esac
     elif [[ $CMD2 == modifyvm ]]; then
         case $PREV in
             --bridge-adapter[0-9])
@@ -107,6 +112,8 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
                 WORDS=$( $CMD list natnets | sed -En 's/^Name:\s+//p' ) ;;
             --host-only-net[0-9])
                 WORDS=$( $CMD list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
+            --groups)
+                WORDS=$( $CMD list groups ) ;;
             --cpu-profile)
                 IFS=$'\n'
                 COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
