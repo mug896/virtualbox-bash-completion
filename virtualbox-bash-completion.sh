@@ -38,9 +38,9 @@ _vboxmanage_quote()
         _vboxmanage_index i snapshot
         WORDS=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
     else
-        WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\1/' )
+        WORDS=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
-    IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W "$WORDS" -- "$CUR"))
+    IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR))
 }
 
 _vboxmanage_option() 
