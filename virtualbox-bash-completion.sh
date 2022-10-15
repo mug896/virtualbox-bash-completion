@@ -1,20 +1,12 @@
-_vboxmanage_index()
-{
-    local -n index=$1
-    for ((index = 1; index < COMP_CWORD; )); do 
-        [[ ${COMP_WORDS[index++]} == $2 ]] && break
-    done
-}
 _vboxmanage_list()
 {
-    local res i
+    local arg=$1 res i
 
     test -n "$_vboxmanage_wait" && _vboxmanage_wait= || _vboxmanage_wait=" wait ... "
     echo -n "$_vboxmanage_wait" >&2
 
-    if [[ $1 == snapshot ]]; then
-        _vboxmanage_index i $CMD2
-        res=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
+    if [[ $arg == snapshot ]]; then
+        res=$( $CMD snapshot "${VMNAME:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
     else
         res=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
@@ -35,8 +27,7 @@ _vboxmanage_quote()
 {
     local i
     if [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
-        _vboxmanage_index i snapshot
-        WORDS=$( $CMD snapshot "${COMP_WORDS[i]:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/\1/p' )
+        WORDS=$( $CMD snapshot "${VMNAME:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
     else
         WORDS=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
@@ -139,8 +130,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         esac
 
     elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
-        _vboxmanage_index i storageattach
-        WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
+        WORDS=$( $CMD showvminfo "${VMNAME:1:-1}" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
         IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
     fi
     
@@ -253,8 +243,8 @@ _vboxmanage_set_cmds()
         fi
         break
     done
-    (( i < COMP_CWORD )) && CMD2=${COMP_WORDS[i]}
-    [[ ! $CMD2 ]] && return
+    (( i < COMP_CWORD )) && { CMD2=${COMP_WORDS[i]} VMNAME=${COMP_WORDS[i+1]} ;}
+    [[ -z $CMD2 ]] && return
     case $CMD2 in
         sharedfolder|dhcpserver|extpack|unattended|hostonlynet|updatecheck|usbfilter|\
         setproperty|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource|\
@@ -300,7 +290,7 @@ _vboxmanage()
     _init_comp_wordbreaks
     [[ $COMP_WORDBREAKS != *@* ]] && COMP_WORDBREAKS+="@"
 
-    local CMD=VBoxManage CMD2 CMD3 CMD4
+    local CMD=VBoxManage CMD2 CMD3 CMD4 VMNAME
     local CUR=${COMP_WORDS[COMP_CWORD]}
     [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *$CUR* ]] && CUR=""
     local PREV=${COMP_WORDS[COMP_CWORD-1]}
