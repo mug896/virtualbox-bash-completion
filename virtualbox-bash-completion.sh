@@ -88,32 +88,39 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         fi
     fi
 
-    if [[ $arg == value ]]; then
-        if [[ $CMD2 == clonevm && $PREV == --mode ]]; then
-            WORDS="machine machinechildren all"
-        elif [[ $CMD2 == modifyvm ]]; then
-            case $PREV in
-                --bridge-adapter[0-9])
-                    WORDS=$( vboxmanage list bridgedifs | sed -En 's/^Name:\s+//p' ) ;;
-                --host-only-adapter[0-9])
-                    WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
-                --intnet[0-9])
-                    WORDS=$( vboxmanage list intnets | sed -En 's/^Name:\s+//p' ) ;;
-                --nat-network[0-9])
-                    WORDS=$( vboxmanage list natnets | sed -En 's/^Name:\s+//p' ) ;;
-                --host-only-net[0-9])
-                    WORDS=$( vboxmanage list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
-                --cpu-profile)
-                    IFS=$'\n'
-                    COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
-            esac
-        else
-            local opt=${PREV/%[0-9]/N}
-            WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
-        fi
-
-    else   # $arg != value
+    if [[ $arg != value ]]; then
         WORDS=$( <<< $HELP grep -Po -- '(?<![[:alnum:]])-[[:alnum:]-]+' )
+        return
+    fi
+
+    if [[ $CMD2 == clonevm && $PREV == --mode ]]; then
+        WORDS="machine machinechildren all"
+    elif [[ $CMD2 == modifyvm ]]; then
+        case $PREV in
+            --bridge-adapter[0-9])
+                WORDS=$( vboxmanage list bridgedifs | sed -En 's/^Name:\s+//p' ) ;;
+            --host-only-adapter[0-9])
+                WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
+            --intnet[0-9])
+                WORDS=$( vboxmanage list intnets | sed -En 's/^Name:\s+//p' ) ;;
+            --nat-network[0-9])
+                WORDS=$( vboxmanage list natnets | sed -En 's/^Name:\s+//p' ) ;;
+            --host-only-net[0-9])
+                WORDS=$( vboxmanage list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
+            --cpu-profile)
+                IFS=$'\n'
+                COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
+        esac
+    elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then
+        case $PREV in
+            --provider)
+                WORDS=$( vboxmanage list cloudproviders | sed -En 's/^Short Name:\s+//p' ) ;; 
+            --profile)
+                WORDS=$( vboxmanage list cloudprofiles | sed -En 's/^Name:\s+//p' ) ;; 
+        esac
+    else
+        local opt=${PREV/%[0-9]/N}
+        WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
     fi
 }
 
