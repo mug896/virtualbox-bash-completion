@@ -343,7 +343,7 @@ _vboxmanage()
     elif [[ $PREV == @(--ostype|--os-type) ]]; then
         WORDS=$( $CMD list ostypes | sed -En 's/^ID:\s+//p' )
 
-    elif [[ -z $CUR ]] && [[ $HELP =~ "$PREV <"[^\>]*"vmname"[^\>]*">" ]]; then
+    elif [[ -z $CUR ]] && [[ $HELP =~ "$PREV <"[^\>]*(vmname|machines?)[^\>]*">" ]]; then
         _vboxmanage_list vmname
 
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
