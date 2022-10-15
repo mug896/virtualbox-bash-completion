@@ -6,7 +6,7 @@ _vboxmanage_list()
     echo -n "$_vboxmanage_wait" >&2
 
     if [[ $arg == snapshot ]]; then
-        res=$( $CMD snapshot "${VMNAME:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
+        res=$( $CMD snapshot "$VMNAME" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
     else
         res=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
@@ -27,7 +27,7 @@ _vboxmanage_quote()
 {
     local i
     if [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
-        WORDS=$( $CMD snapshot "${VMNAME:1:-1}" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
+        WORDS=$( $CMD snapshot "$VMNAME" list | sed -En 's/^\s*Name: (.*) \(UUID:.*/"\1"/p' )
     else
         WORDS=$( $CMD list vms | sed -E 's/(.*").*/\1/' )
     fi
@@ -130,7 +130,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         esac
 
     elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
-        WORDS=$( $CMD showvminfo "${VMNAME:1:-1}" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
+        WORDS=$( $CMD showvminfo "$VMNAME" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
         IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
     fi
     
@@ -243,7 +243,10 @@ _vboxmanage_set_cmds()
         fi
         break
     done
-    (( i < COMP_CWORD )) && { CMD2=${COMP_WORDS[i]} VMNAME=${COMP_WORDS[i+1]} ;}
+    if (( i < COMP_CWORD )); then
+        CMD2=${COMP_WORDS[i]}
+        VMNAME=${COMP_WORDS[i+1]#\"} VMNAME=${VMNAME%\"}
+    fi
     [[ -z $CMD2 ]] && return
     case $CMD2 in
         sharedfolder|dhcpserver|extpack|unattended|hostonlynet|updatecheck|usbfilter|\
