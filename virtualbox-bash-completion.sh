@@ -98,15 +98,15 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     elif [[ $CMD2 == modifyvm ]]; then
         case $PREV in
             --bridge-adapter[0-9])
-                WORDS=$( vboxmanage list bridgedifs | sed -En 's/^Name:\s+//p' ) ;;
+                WORDS=$( $CMD list bridgedifs | sed -En 's/^Name:\s+//p' ) ;;
             --host-only-adapter[0-9])
-                WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
+                WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
             --intnet[0-9])
-                WORDS=$( vboxmanage list intnets | sed -En 's/^Name:\s+//p' ) ;;
+                WORDS=$( $CMD list intnets | sed -En 's/^Name:\s+//p' ) ;;
             --nat-network[0-9])
-                WORDS=$( vboxmanage list natnets | sed -En 's/^Name:\s+//p' ) ;;
+                WORDS=$( $CMD list natnets | sed -En 's/^Name:\s+//p' ) ;;
             --host-only-net[0-9])
-                WORDS=$( vboxmanage list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
+                WORDS=$( $CMD list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
             --cpu-profile)
                 IFS=$'\n'
                 COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
@@ -114,9 +114,16 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then
         case $PREV in
             --provider)
-                WORDS=$( vboxmanage list cloudproviders | sed -En 's/^Short Name:\s+//p' ) ;; 
+                WORDS=$( $CMD list cloudproviders | sed -En 's/^Short Name:\s+//p' ) ;; 
             --profile)
-                WORDS=$( vboxmanage list cloudprofiles | sed -En 's/^Name:\s+//p' ) ;; 
+                WORDS=$( $CMD list cloudprofiles | sed -En 's/^Name:\s+//p' ) ;; 
+        esac
+    elif [[ $CMD2 == dhcpserver ]]; then
+        case $PREV in
+            --interface)
+                WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' ) ;;
+            --network)
+                WORDS=$( $CMD list dhcpservers | sed -En 's/^NetworkName:\s+//p' ) ;;
         esac
     else
         local opt=${PREV/%[0-9]/N}
@@ -133,7 +140,7 @@ _vboxmanage_words()
 
     elif [[ $CMD2 == setproperty ]]; then
         if [[ -z $CMD3 ]]; then
-            WORDS=$( vboxmanage help setproperty | sed -En '/^Description$/,/^Examples$/{ //d; /^[ ]{,3}\w+$/p }' )
+            WORDS=$( $CMD help setproperty | sed -En '/^Description$/,/^Examples$/{ //d; /^[ ]{,3}\w+$/p }' )
         elif [[ $CMD3 == proxymode ]]; then
             WORDS="manual noproxy system"
         elif [[ $CMD3 == hwvirtexclusive ]]; then
@@ -188,6 +195,8 @@ hostonlyif|usbdevsource) ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' ('"$RE"'*)( .*|$)/\1/p' )
         elif [[ $CMD2 == metrics ]]; then
             WORDS="'*' host vmname metrics-list"
+        elif [[ $CMD2 == hostonlyif && $PREV == @(ipconfig|remove) ]]; then
+            WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' )
         fi
     elif [[ $CMD2 == cloud ]]; then
         if [[ -z $CMD3 ]]; then
@@ -315,9 +324,6 @@ _vboxmanage()
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
         _vboxmanage_list snapshot
     
-    elif [[ $PREV == --interface || $HELP =~ "$PREV <ifname>" ]]; then
-        WORDS=$( vboxmanage list hostonlyifs | sed -En 's/^Name:\s+//p' ) 
-
     elif [[ $PREV == -* && $CMD2 != metrics ]]; then
         _vboxmanage_option value
 
