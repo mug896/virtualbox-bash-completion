@@ -40,8 +40,7 @@ _vboxmanage_quote()
     else
         WORDS=$( $CMD list vms | sed -E 's/^"([^"]*)".*/\1/' )
     fi
-    IFS=$'\n'
-    COMPREPLY=($(compgen -P \" -S \" -W "$WORDS" -- "$CUR"))
+    IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W "$WORDS" -- "$CUR"))
 }
 
 _vboxmanage_option() 
@@ -115,8 +114,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --groups)
                 WORDS=$( $CMD list groups ) ;;
             --cpu-profile)
-                IFS=$'\n'
-                COMPREPLY=($(compgen -P \' -S \' -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
+                IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
         esac
     elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then
         case $PREV in
@@ -136,7 +134,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         _vboxmanage_index i storageattach
         WORDS=$( $CMD showvminfo "${COMP_WORDS[i]:1:-1}" --machinereadable | 
             sed -En 's/storagecontrollername[0-9]=//p' )
-        COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
+        IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
     fi
     
     if [[ -z $WORDS ]]; then
@@ -331,7 +329,8 @@ _vboxmanage()
     elif [[ $CMD2 = internalcommands && -z $CMD3 ]]; then
         WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
 
-    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* && $PREV != --storagectl ]]; then
+    elif [[ ${COMP_WORDS[COMP_CWORD]} == \"* && 
+        $PREV != @(--storagectl|--cpu-profile) ]]; then
         _vboxmanage_quote
 
     elif [[ $PREV == @(--ostype|--os-type) ]]; then
