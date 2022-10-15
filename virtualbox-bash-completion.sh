@@ -132,7 +132,9 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --network)
                 WORDS=$( $CMD list dhcpservers | sed -En 's/^NetworkName:\s+//p' ) ;;
         esac
-    else
+    fi
+    
+    if [[ -z $WORDS ]]; then
         local opt=${PREV/%[0-9]/N}
         WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
     fi
