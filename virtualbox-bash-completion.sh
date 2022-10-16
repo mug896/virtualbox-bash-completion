@@ -105,6 +105,8 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
                 WORDS=$( $CMD list hostonlynets | sed -En 's/^Name:\s+//p' ) ;;
             --groups)
                 WORDS=$( $CMD list groups ) ;;
+            --default-frontend)
+                WORDS=$( vboxmanage help startvm | sed -En '/^\s*--type=/{ s///; s/\|//g; p; Q }' )" default" ;;
             --cpu-profile)
                 IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
         esac
