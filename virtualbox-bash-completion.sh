@@ -90,6 +90,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --groups)
                 WORDS=$( $CMD list groups ) ;;
         esac
+
     elif [[ $CMD2 == modifyvm ]]; then
         case $PREV in
             --bridge-adapter[0-9])
@@ -107,6 +108,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --cpu-profile)
                 IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
         esac
+
     elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then
         case $PREV in
             --provider)
