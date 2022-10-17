@@ -346,7 +346,7 @@ _vboxmanage()
     elif [[ -z $CUR ]] && [[ $PREV == --snapshot || $HELP =~ "$PREV <snapshot-name>" ]]; then
         _vboxmanage_list snapshot
     
-    elif [[ $PREV == -* && $CMD2 != metrics ]]; then
+    elif [[ $PREV == -* && $CMD2 != @(metrics|list) ]]; then
         _vboxmanage_option value
 
     else
