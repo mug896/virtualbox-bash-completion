@@ -79,7 +79,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     fi
 
     if [[ $arg != value ]]; then
-        WORDS=$( <<< $HELP grep -Po -- '(?<![[:alnum:]])-[[:alnum:]-]+' )
+        WORDS=$( <<< $HELP grep -Po -- '(?<![[:alnum:]])-[[:alnum:]-]*[[:alpha:]]' )
         return
     fi
 
