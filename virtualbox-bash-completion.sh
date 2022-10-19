@@ -111,6 +111,9 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
                 IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
         esac
 
+    elif [[ $CMD2 == natnetwork && $PREV == --netname ]]; then
+        WORDS=$( $CMD list natnets | sed -En 's/^Name:\s+//p' )
+
     elif [[ $CMD2 == @(cloud|cloudprofile) ]]; then
         case $PREV in
             --provider)
