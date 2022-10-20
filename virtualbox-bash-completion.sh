@@ -86,7 +86,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     if [[ $CMD2 == clonevm ]]; then
         case $PREV in
             --mode)
-                WORDS="machine machinechildren all" ;;
+                WORDS=$'machine\nmachinechildren\nall' ;;
             --groups)
                 WORDS=$( $CMD list groups ) ;;
         esac
@@ -108,7 +108,7 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
             --default-frontend)
                 WORDS=$( vboxmanage help startvm | sed -En '/^\s*--type=/{ s///; s/\|//g; p; Q }' )" default" ;;
             --cpu-profile)
-                IFS=$'\n' COMPREPLY=($(compgen -P \" -S \" -W $'host\nIntel 8086\nIntel 80286\nIntel 80386' -- "$CUR")) ;;
+                WORDS=$'host\nIntel 8086\nIntel 80286\nIntel 80386' ;;
         esac
 
     elif [[ $CMD2 == natnetwork && $PREV == --netname ]]; then
@@ -123,8 +123,8 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
         esac
         if [[ $CMD2 == cloud && $CMD3 == list && $PREV == --state ]]; then
             case $CMD4 in
-                instances) WORDS="running paused terminated" ;;
-                images) WORDS="available disabled deleted" ;;
+                instances) WORDS=$'running\npaused\nterminated' ;;
+                images) WORDS=$'available\ndisabled\ndeleted' ;;
             esac
         fi
 
@@ -139,11 +139,12 @@ updatecheck|usbfilter|guestproperty|metrics|natnetwork|hostonlyif|usbdevsource) 
     elif [[ $CMD2 == storageattach && $PREV == --storagectl ]]; then
         WORDS=$( $CMD showvminfo "$VMNAME" --machinereadable | sed -En 's/storagecontrollername[0-9]=//p' )
         IFS=$'\n' COMPREPLY=($(compgen -W '$WORDS' -- \\\"$CUR ))
+        return
     fi
-    
+
     if [[ -z $WORDS ]]; then
         local opt=${PREV/%[0-9]/N}
-        WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/ /g; p' )
+        WORDS=$( <<< $HELP sed -En 's/.*'"$opt"'[= ]\[?((\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?[,|/])+\[?(([[:alnum:].:]+-?)*[[:alnum:].:]+)\]?)]?.*/\1/; tX; b; :X s/[^[:alnum:].:-]/\n/g; p' )
     fi
 }
 
@@ -152,15 +153,15 @@ _vboxmanage_words()
     local RE='[[:alnum:]][[:alnum:]-]'
 
     if [[ $CMD2 == list ]]; then
-        WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'|--\w+//g; s/\[|]|\|/ /g; p' )
+        WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"'|--\w+//g; s/\[|]|\|/\n/g; p' )
 
     elif [[ $CMD2 == setproperty ]]; then
         if [[ -z $CMD3 ]]; then
             WORDS=$( $CMD help setproperty | sed -En '/^Description$/,/^Examples$/{ //d; /^[ ]{,3}\w+$/p }' )
         elif [[ $CMD3 == proxymode ]]; then
-            WORDS="manual noproxy system"
+            WORDS=$'manual\nnoproxy\nsystem'
         elif [[ $CMD3 == hwvirtexclusive ]]; then
-            WORDS="on off"
+            WORDS=$'on\noff'
         fi
 
     elif [[ $CMD2 == @(snapshot|encryptvm|controlvm|debugvm|modifynvram|\
@@ -168,36 +169,37 @@ bandwidthctl|guestcontrol) ]]; then
         if [[ -z $CMD3 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' [^ ]+ ('"$RE"*')( .*|$)/\1/p' )
         elif [[ $CMD2 == guestcontrol && $PREV == list ]]; then
-            WORDS="all files processes sessions"
+            WORDS='all\nfiles\nprocesses\nsessions'
         elif [[ $CMD2 == controlvm ]]; then
             case $CMD3 in
                 setlinkstate[0-9]|nictrace[0-9]|audioin|audioout|vrde|autostart-enabled[0-9])
-                    WORDS="on off" ;;
+                    WORDS=$'on\noff' ;;
                 nic[0-9])
-                    WORDS="null nat bridged intnet hostonly generic natnetwork" ;;
+                    WORDS=$'null\nnat\nbridged\nintnet\nhostonly\ngeneric\nnatnetwork' ;;
                 nicpromisc[0-9])
-                    WORDS="deny allow-vms allow-all" ;;
+                    WORDS=$'deny\nallow-vms\nallow-all' ;;
                 natpf[0-9]) 
-                    WORDS="rulename tcp udp host-IP hostport guest-IP guestport" ;;
+                    WORDS=$'rulename\ntcp\nudp\nhost-IP\nhostport\nguest-IP\nguestport' ;;
                 clipboard) 
                     if [[ $PREV == clipboard ]]; then
-                        WORDS="mode filetransfers"
+                        WORDS=$'mode\nfiletransfers'
                     elif [[ $PREV == mode ]]; then
-                        WORDS="disabled hosttoguest guesttohost bidirectional"
+                        WORDS=$'disabled\nhosttoguest\nguesttohost\nbidirectional'
                     elif [[ $PREV == filetransfers ]]; then
-                        WORDS="on off"
+                        WORDS=$'on\noff'
                     fi ;;
                 draganddrop) 
-                    WORDS="disabled hosttoguest guesttohost bidirectional" ;;
+                    WORDS=$'disabled\nhosttoguest\nguesttohost\nbidirectional' ;;
                 recording)
-                    WORDS="on off screens filename videores videorate videofps maxtime maxfilesize" ;;
+                    WORDS=$'on\noff\nscreens\nfilename\nvideores\nvideorate\nvideofps
+                    maxtime\nmaxfilesize' ;;
                 webcam)
-                    WORDS="attach detach list" ;;
+                    WORDS=$'attach\ndetach\nlist' ;;
                 vm-process-priority)
-                    WORDS="default flat low normal high" ;;
+                    WORDS=$'default\nflat\nlow\nnormal\nhigh' ;;
                 changeuartmode[0-9])
-                    WORDS="disconnected serverpipe-name clientpipe-name
-                    tcpserverport tcpclienthostname:port filefilename device-name" ;;
+                    WORDS=$'disconnected\nserverpipe-name\nclientpipe-name\ntcpserverport
+                    tcpclienthostname:port\nfilefilename\ndevice-name' ;;
             esac
         fi
 
@@ -210,7 +212,7 @@ hostonlyif|usbdevsource) ]]; then
         if [[ -z $CMD3 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' ('"$RE"'*)( .*|$)/\1/p' )
         elif [[ $CMD2 == metrics ]]; then
-            WORDS="'*' host vmname metrics-list"
+            WORDS=$'"*"\nhost\nvmname\nmetrics-list'
         elif [[ $CMD2 == hostonlyif && $PREV == @(ipconfig|remove) ]]; then
             WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' )
         fi
@@ -225,16 +227,16 @@ hostonlyif|usbdevsource) ]]; then
     elif [[ $CMD2 == @(showmediuminfo|createmedium|modifymedium|mediumproperty|\
 closemedium) ]]; then
         if [[ $PREV == $CMD2 ]]; then
-            WORDS="disk dvd floppy"
+            WORDS=$'disk\ndvd\nfloppy'
         elif [[ -z $CMD3 && $CMD2 == mediumproperty ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' [^ ]+ ('"$RE"'*)( .*|$)/\1/p' )
         fi
 
     elif [[ $CMD2 == clonemedium ]]; then
-        [[ -n $CMD3 && -n $CMD4 && $PREV == $CMD4 ]] && WORDS="disk dvd floppy"
+        [[ -n $CMD3 && -n $CMD4 && $PREV == $CMD4 ]] && WORDS=$'disk\ndvd\nfloppy'
 
     elif [[ $CMD2 == getextradata ]]; then
-        WORDS="keyword enumerate"
+        WORDS=$'keyword\nenumerate'
     fi
 }
 
@@ -317,7 +319,8 @@ _vboxmanage()
 
     if [[ $CUR == -* ]]; then
         if [[ -z $CMD2 ]]; then
-            WORDS="-V --version --dump-build-type -q --nologo --settingspw= --settingspwfile="
+            WORDS=$'-V\n--version\n--dump-build-type\n-q\n--nologo\n--settingspw=
+--settingspwfile='
         else
             _vboxmanage_option
         fi
@@ -331,7 +334,7 @@ _vboxmanage()
 
     elif [[ $PREV != @(--settingspw|--settingspwfile) && ( -z $CMD2 || $CMD2 == help ) ]]; then
         WORDS=$( $CMD | sed -En 's/^\s*VBoxManage (\w+).*/\1/p' )
-        WORDS+=" internalcommands help"
+        WORDS+=$'\ninternalcommands\nhelp'
 
     elif [[ $CMD2 = internalcommands && -z $CMD3 ]]; then
         WORDS=$( <<< $HELP grep -Po '(?<=^  )([a-z]+)' )
@@ -356,7 +359,14 @@ _vboxmanage()
         [[ $CMD2 != internalcommands ]] && _vboxmanage_words
     fi
 
-    [[ -z $COMPREPLY ]] && COMPREPLY=( $(compgen -W '$WORDS' -- $CUR) )
+    if [[ -z $COMPREPLY ]]; then
+        WORDS=$( <<< $WORDS sed -E 's/^[[:blank:]]+|[[:blank:]]+$//g' )
+        if [[ $WORDS == *[[:graph:]][\ ][[:graph:]]* ]]; then
+            IFS=$'\n' COMPREPLY=($(compgen -P \' -S \' -W "$WORDS" -- "$CUR"))
+        else
+            IFS=$'\n' COMPREPLY=($(compgen -W "$WORDS" -- "$CUR"))
+        fi
+    fi
     [[ ${COMPREPLY: -1} == "=" ]] && compopt -o nospace
 }
 complete -o default -o bashdefault -F _vboxmanage vboxmanage VBoxManage
