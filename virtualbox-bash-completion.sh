@@ -212,7 +212,7 @@ hostonlyif|usbdevsource) ]]; then
         if [[ -z $CMD3 ]]; then
             WORDS=$( <<< $HELP sed -En 's/'"$CMD $CMD2"' ('"$RE"'*)( .*|$)/\1/p' )
         elif [[ $CMD2 == metrics ]]; then
-            WORDS=$'"*"\nhost\nvmname\nmetrics-list'
+            WORDS=$'\\"*\\"\nhost\nvmname\nmetrics-list'
         elif [[ $CMD2 == hostonlyif && $PREV == @(ipconfig|remove) ]]; then
             WORDS=$( $CMD list hostonlyifs | sed -En 's/^Name:\s+//p' )
         fi
