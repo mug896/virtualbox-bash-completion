@@ -23,6 +23,8 @@ convertfromraw    guestcontrol      modifymedium      signova
 createmedium      guestproperty     modifynvram       snapshot
 ```
 
+> please leave an issue above if you have any problems using this script.
+
 ## Installation
 
 Copy contents of virtualbox-bash-completion.sh to ~/.bash_completion  
