@@ -23,7 +23,6 @@ convertfromraw    guestcontrol      modifymedium      signova
 createmedium      guestproperty     modifynvram       snapshot
 ```
 
-> please leave an issue above if you have any problems using this script.
 
 ## Installation
 
@@ -77,4 +76,6 @@ You can see virtualbox subcommand usage with
 > vboxmanage command-name    
 > vboxmanage help command-name (detail version)
 
+
+> please leave an issue above if you have any problems using this script.
 
