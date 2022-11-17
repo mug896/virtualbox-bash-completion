@@ -359,7 +359,7 @@ _vboxmanage()
         [[ $CMD2 != internalcommands ]] && _vboxmanage_words
     fi
 
-    if ! declare -p COMPREPLY > /dev/null; then
+    if ! declare -p COMPREPLY &> /dev/null; then
         WORDS=$( <<< $WORDS sed -E 's/^[[:blank:]]+|[[:blank:]]+$//g' )
         if [[ $WORDS == *" "* ]]; then
             IFS=$'\n' COMPREPLY=($(compgen -P \' -S \' -W "$WORDS" -- "$CUR"))
