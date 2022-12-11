@@ -304,7 +304,7 @@ _vboxmanage()
 
     local CMD=VBoxManage CMD2 CMD3 CMD4 VMNAME
     local CUR=${COMP_WORDS[COMP_CWORD]}
-    [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *$CUR* ]] && CUR=""
+    [[ ${COMP_LINE:COMP_POINT-1:1} = " " || $COMP_WORDBREAKS == *"$CUR"* ]] && CUR=""
     local PREV=${COMP_WORDS[COMP_CWORD-1]}
     [[ $PREV == "=" ]] && PREV=${COMP_WORDS[COMP_CWORD-2]}
     local IFS=$' \t\n' WORDS HELP
